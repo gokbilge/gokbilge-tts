@@ -23,16 +23,26 @@ Development has moved to [OHF-Voice/piper1-gpl](https://github.com/OHF-Voice/pip
 ## Installation
 
 ```bash
-# Install Gokbilge TTS with training dependencies
-pip install -e ".[train]"
+# 1. System dependencies
+sudo apt-get install espeak-ng espeak-ng-data python3-dev build-essential
 
-# Install espeak-ng (required by piper_train.preprocess)
-# Ubuntu/Debian:
-sudo apt-get install espeak-ng
+# 2. Install piper_train from source (not on PyPI)
+git clone https://github.com/rhasspy/piper /opt/piper-src
+cd /opt/piper-src/src/python
+pip3 install -e . --break-system-packages
+bash build_monotonic_align.sh   # compiles Cython extension required for training
 
-# Install Piper inference binary (for infer.sh)
-# See https://github.com/rhasspy/piper/releases
+# 3. Install Gokbilge TTS (dev tools only; piper-train handled above)
+cd /path/to/gokbilge-tts
+pip3 install -e ".[dev]" --break-system-packages
+
+# 4. Install Piper inference binary (for infer.sh / synthesis)
+# Download from https://github.com/rhasspy/piper/releases and add to PATH
 ```
+
+> **Note:** `pip install -e ".[train]"` does not install piper_train — the `[train]`
+> extra is intentionally empty because piper_train is not published on PyPI.
+> Always follow step 2 above for the training toolchain.
 
 ---
 
@@ -240,7 +250,7 @@ A successful smoke run means the pipeline is wired correctly. Audio quality at 5
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
-| `preprocess` fails immediately | `espeak-ng` not installed | `sudo apt-get install espeak-ng` |
+| `preprocess` fails immediately | `espeak-ng` not installed | `sudo apt-get install espeak-ng espeak-ng-data` |
 | `preprocess` produces no output | `metadata.csv` has wrong column count or missing `wavs/` | Run `gokbilge-tts validate-piper <piper_dir>` |
 | `piper_train` crashes at start | `config.json` mismatch or missing from training_dir | Confirm preprocess completed; check `training_dir/config.json` |
 | `wavs/<stem>.wav` not found | Symlinks broken (moved corpus after export) or Windows privilege issue | Re-run `export-piper` with corpus in place; use `--limit` to test |

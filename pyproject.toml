@@ -45,7 +45,10 @@ phonemizer = [
   "phonemizer>=3.2",
 ]
 train = [
-  "piper-train>=1.0.0",
+  # piper_train is NOT on PyPI — install from source before using this extra:
+  #   git clone https://github.com/rhasspy/piper /opt/piper-src
+  #   cd /opt/piper-src/src/python && pip3 install -e . && bash build_monotonic_align.sh
+  # See docs/PIPER_TRAINING.md § Installation for the full procedure.
 ]
 dev = [
   "pytest>=7.0",
