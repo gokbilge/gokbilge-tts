@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
-# prepare.sh — Convert ISSAI corpus to JSONL manifest with G2P phonemes
-# Usage: bash prepare.sh <issai_corpus_dir> <output_dir>
+# prepare.sh — Build ISSAI manifests, validate, and export to Piper LJSpeech format
+# Usage: bash prepare.sh <issai_corpus_dir> <manifest_dir> <piper_dir>
 set -euo pipefail
 
-CORPUS_DIR="${1:?Usage: prepare.sh <corpus_dir> <output_dir>}"
-OUTPUT_DIR="${2:?Usage: prepare.sh <corpus_dir> <output_dir>}"
+CORPUS_DIR="${1:?Usage: prepare.sh <corpus_dir> <manifest_dir> <piper_dir>}"
+MANIFEST_DIR="${2:?Usage: prepare.sh <corpus_dir> <manifest_dir> <piper_dir>}"
+PIPER_DIR="${3:?Usage: prepare.sh <corpus_dir> <manifest_dir> <piper_dir>}"
 
-mkdir -p "$OUTPUT_DIR"
+mkdir -p "$MANIFEST_DIR" "$PIPER_DIR"
 
-echo "[prepare] Running ISSAI manifest preparation..."
+echo "[prepare] Building ISSAI manifests..."
 gokbilge-tts prepare-issai \
     --dataset-dir "$CORPUS_DIR" \
-    --out "$OUTPUT_DIR"
+    --out "$MANIFEST_DIR"
 
-echo "[prepare] Done. Manifests at $OUTPUT_DIR"
+echo "[prepare] Validating train manifest..."
+gokbilge-tts validate-manifest "$MANIFEST_DIR/train.jsonl"
+
+echo "[prepare] Exporting to Piper LJSpeech format..."
+gokbilge-tts export-piper \
+    --manifest-dir "$MANIFEST_DIR" \
+    --out "$PIPER_DIR"
+
+echo "[prepare] Done. Piper dataset at $PIPER_DIR"
+echo "[prepare] Next: bash train.sh $PIPER_DIR <training_dir> <checkpoint_dir>"
