@@ -48,16 +48,19 @@ JSONL manifests (train/val/test.jsonl, symbols.txt)
 validated manifests
   │
   ▼  gokbilge-tts export-piper
-Piper LJSpeech format (wavs/, metadata.csv, config.json)
+Piper LJSpeech format (wavs/, metadata.csv, config.json skeleton)
+  │
+  ▼  gokbilge-tts validate-piper
+validated Piper export
   │
   ▼  python3 -m piper_train.preprocess
-phoneme-processed training dataset
+phoneme-processed training dataset + config.json with phoneme_id_map
   │
   ▼  python3 -m piper_train
 checkpoints (.ckpt)
   │
   ▼  python3 -m piper_train.export_onnx
-model.onnx + model.onnx.json
+model.onnx + model.onnx.json (from training_dir/config.json)
   │
   ▼  piper CLI
 synthesized speech
@@ -93,7 +96,17 @@ gokbilge-tts export-piper \
     --out ./data/piper
 ```
 
-Outputs: `data/piper/wavs/` (symlinks), `metadata.csv`, `config.json`, `train.txt`, `val.txt`.
+Outputs: `data/piper/wavs/` (symlinks), `metadata.csv`, `config.json` (skeleton), `train.txt`, `val.txt`.
+
+The `config.json` written here is a **skeleton** — `phoneme_id_map` is empty and will be filled by `piper_train.preprocess`.
+
+### 3b. Validate Piper export
+
+```bash
+gokbilge-tts validate-piper ./data/piper
+```
+
+Checks: `metadata.csv` format, every stem has a matching `wavs/<stem>.wav`, no empty text rows.
 
 ### 4. Preprocess (espeak phonemization)
 
@@ -106,6 +119,8 @@ python3 -m piper_train.preprocess \
     --single-speaker \
     --sample-rate 22050
 ```
+
+Outputs: `data/training/*.pt` (phoneme tensors), `data/training/config.json` (**final config with phoneme_id_map populated**).
 
 ### 5. Train
 
@@ -131,7 +146,9 @@ python3 -m piper_train.export_onnx \
     ./checkpoints/last.ckpt \
     ./models/gokbilge_tr_v0_1.onnx
 
-cp ./data/piper/config.json ./models/gokbilge_tr_v0_1.onnx.json
+# Use training_dir/config.json — it has the filled phoneme_id_map.
+# Do NOT use data/piper/config.json (the skeleton).
+cp ./data/training/config.json ./models/gokbilge_tr_v0_1.onnx.json
 ```
 
 ### 7. Synthesize
@@ -147,51 +164,90 @@ echo "Bugün hava çok güzel." | piper \
 
 ## Recipe Scripts
 
-The `recipes/issai_piper/` directory provides wrapper scripts for steps 1–7:
+The `recipes/issai_piper/` directory provides wrapper scripts:
 
-| Script | Steps covered |
-|--------|---------------|
-| `prepare.sh <corpus> <manifests> <piper>` | 1–3 |
-| `train.sh <piper> <training> <checkpoints>` | 4–5 |
-| `export_onnx.sh <ckpt> <piper> <model_name>` | 6 |
-| `infer.sh <model_base> <text> <output.wav>` | 7 |
+| Script | Steps covered | Usage |
+|--------|---------------|-------|
+| `prepare.sh` | 1–3 | `bash prepare.sh <corpus> <manifests> <piper>` |
+| `train.sh` | 4–5 | `bash train.sh <piper> <training> <checkpoints>` |
+| `export_onnx.sh` | 6 | `bash export_onnx.sh <ckpt> <training_dir> <model_name>` |
+| `infer.sh` | 7 | `bash infer.sh <model_base> <text> <output.wav>` |
+| `smoke.sh` | 1–5 (100 utts) | `bash smoke.sh <issai_dir> <run_dir>` |
 
 ---
 
-## Smoke Test (fast correctness check)
+## Smoke Run
 
-To verify the full pipeline on a small subset before committing to a full training run:
+To verify the full pipeline on 100 utterances before a full training run:
 
 ```bash
-# Export only 100 training utterances
-gokbilge-tts export-piper \
-    --manifest-dir ./data/manifests \
-    --out ./data/piper_smoke \
-    --limit 100
-
-# Preprocess the 100-utterance dataset
-python3 -m piper_train.preprocess \
-    --language tr \
-    --input-dir ./data/piper_smoke \
-    --output-dir ./data/training_smoke \
-    --dataset-format ljspeech \
-    --single-speaker \
-    --sample-rate 22050
-
-# Short smoke training run (5 epochs, CPU or GPU)
-python3 -m piper_train \
-    --dataset-dir ./data/training_smoke \
-    --accelerator cpu \
-    --devices 1 \
-    --batch-size 4 \
-    --validation-split 0.0 \
-    --num-test-examples 0 \
-    --max_epochs 5 \
-    --checkpoint-epochs 5 \
-    --precision 32
+bash recipes/issai_piper/smoke.sh /home/hcfk/datasets/ISSAI ./runs/smoke
 ```
 
-A successful smoke run confirms: espeak-ng is installed and processes Turkish, the dataset pipeline is wired correctly, and piper_train can train without crashing.
+This runs steps 1–5 with `--limit 100` (100 train + up to 10 val + up to 10 test utterances) and 5 training epochs. It does not run ONNX export automatically.
+
+### Smoke mode limits
+
+When `--limit N` is passed to `export-piper`:
+- **train**: first N records
+- **val**: first `min(10, available)` records
+- **test**: first `min(10, available)` records
+
+Val and test are capped at 10 so they stay proportional and don't dominate the smoke dataset.
+
+---
+
+## Smoke Run Checklist
+
+### After `prepare-issai`
+
+Expected files in `<run>/manifests/`:
+- `train.jsonl` — training records (one JSON object per line)
+- `val.jsonl` — validation records
+- `test.jsonl` — test records
+- `stats.json` — counts, hours, speaker list, filter stats
+- `symbols.txt` — IPA phoneme inventory (one symbol per line)
+
+Each JSONL record has fields: `audio_filepath`, `text`, `normalized_text`, `phonemes`, `duration`, `speaker_id`.
+
+### After `export-piper`
+
+Expected files in `<run>/piper/`:
+- `metadata.csv` — LJSpeech format: `stem|text` (single-speaker) or `stem|speaker|text`
+- `wavs/` — symlinks (Linux) or copies (Windows) of source WAV files
+- `config.json` — Piper training config skeleton (`phoneme_id_map` is empty at this stage)
+- `train.txt`, `val.txt`, `test.txt` — one stem per line
+
+### After `piper_train.preprocess`
+
+Expected files in `<run>/training/`:
+- `*.pt` — phoneme ID tensors for each utterance
+- `config.json` — **final config with `phoneme_id_map` populated by espeak-ng**
+
+This `config.json` is the one that must be copied next to the ONNX model.
+
+### After smoke training (5 epochs)
+
+Expected files in `<run>/checkpoints/`:
+- `*.ckpt` — checkpoint files (at minimum `last.ckpt` after epoch 5)
+- `train.log` — captured stdout/stderr from `piper_train`
+
+A successful smoke run means the pipeline is wired correctly. Audio quality at 5 epochs will be poor (noise) — that is expected.
+
+---
+
+## Common Failure Modes
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| `preprocess` fails immediately | `espeak-ng` not installed | `sudo apt-get install espeak-ng` |
+| `preprocess` produces no output | `metadata.csv` has wrong column count or missing `wavs/` | Run `gokbilge-tts validate-piper <piper_dir>` |
+| `piper_train` crashes at start | `config.json` mismatch or missing from training_dir | Confirm preprocess completed; check `training_dir/config.json` |
+| `wavs/<stem>.wav` not found | Symlinks broken (moved corpus after export) or Windows privilege issue | Re-run `export-piper` with corpus in place; use `--limit` to test |
+| Audio resampling warning | ISSAI is 16 kHz but config says 22050 Hz | This is expected; preprocess handles resampling |
+| `CUDA error` / `device not found` | GPU unavailable | Change `--accelerator gpu` to `--accelerator cpu` in smoke.sh or train.sh |
+| `piper_train` not found | `piper-train` not installed | `pip install -e ".[train]"` |
+| Empty `phoneme_id_map` in ONNX config | Copied `piper_dir/config.json` instead of `training_dir/config.json` | Use `training_dir/config.json`; it is filled by preprocess |
 
 ---
 
@@ -212,8 +268,18 @@ stem|speaker_id|normalized_text
 100000|issai|bugün hava çok güzel
 ```
 
-### config.json skeleton (generated by export-piper)
+### config.json — skeleton vs. final
 
+Two versions of `config.json` exist in the pipeline:
+
+| File | When created | phoneme_id_map |
+|------|-------------|----------------|
+| `piper_dir/config.json` | By `export-piper` | Empty `{}` |
+| `training_dir/config.json` | By `piper_train.preprocess` | Populated by espeak-ng |
+
+Always use `training_dir/config.json` for ONNX export and inference.
+
+Example skeleton (from `export-piper`):
 ```json
 {
   "audio": { "sample_rate": 22050 },
@@ -227,12 +293,10 @@ stem|speaker_id|normalized_text
 }
 ```
 
-`phoneme_id_map` is intentionally empty — `piper_train.preprocess` fills it based on espeak output.
-
 ---
 
 ## Known Limitations
 
-- **Phonemization**: `piper_train.preprocess` uses espeak-ng for Turkish. Our custom Turkish G2P (`gokbilge_tts.g2p.turkish`) is used for the JSONL manifest phonemes field but is not yet wired into the Piper training path. Integrating our G2P as the phonemizer is a Sprint 4/5 goal.
+- **Phonemization**: `piper_train.preprocess` uses espeak-ng for Turkish. Our custom Turkish G2P (`gokbilge_tts.g2p.turkish`) produces IPA phonemes stored in JSONL manifests but is not yet wired into Piper training. Integrating our G2P as the Piper phonemizer is a Sprint 4/5 goal.
 - **espeak-ng Turkish quality**: espeak-ng tr voice handles most Turkish correctly but may mis-stress compound words and loanwords.
-- **Sample rate**: ISSAI corpus is 16 kHz; Piper default is 22050 Hz. Resampling is handled by `piper_train.preprocess`. The config.json `sample_rate` should match the preprocessor's `--sample-rate`.
+- **Sample rate**: ISSAI corpus is 16 kHz; Piper default target is 22050 Hz. Resampling is handled by `piper_train.preprocess`. The `sample_rate` in `config.json` must match `--sample-rate` passed to preprocess.

@@ -86,6 +86,26 @@ def validate_manifest_cmd(
         raise typer.Exit(code=1)
 
 
+@app.command("validate-piper")
+def validate_piper_cmd(
+    piper_dir: Path = typer.Argument(..., help="Piper export directory (output of export-piper)"),
+) -> None:
+    """Validate a Piper export directory (metadata.csv, wavs/, config.json)."""
+    from gokbilge_tts.datasets.export_piper import validate_piper_export
+
+    console.print(f"Validating Piper export: [bold]{piper_dir}[/bold] …")
+    valid, errors = validate_piper_export(piper_dir)
+
+    for err in errors:
+        console.print(f"  [red]ERROR:[/red] {err}")
+
+    status = "[green]PASS[/green]" if not errors else "[red]FAIL[/red]"
+    console.print(f"{status}  valid={valid}  errors={len(errors)}")
+
+    if errors:
+        raise typer.Exit(code=1)
+
+
 @app.command("export-piper")
 def export_piper_cmd(
     manifest_dir: Path = typer.Option(..., "--manifest-dir", help="Directory with train/val.jsonl and symbols.txt"),

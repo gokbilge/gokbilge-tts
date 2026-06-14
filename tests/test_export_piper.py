@@ -1,4 +1,4 @@
-"""Tests for export_piper and hardened validate_manifest."""
+"""Tests for export_piper, validate_piper_export, and hardened validate_manifest."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from gokbilge_tts.datasets.export_piper import export_piper
+from gokbilge_tts.datasets.export_piper import export_piper, validate_piper_export
 from gokbilge_tts.datasets.validate_manifest import validate_manifest
 
 
@@ -151,19 +151,72 @@ def test_export_limit_caps_training_records(manifest_dir, tmp_path):
     assert len(train_stems) == 2  # limit=2, down from 3
 
 
-def test_export_limit_does_not_affect_val(manifest_dir, tmp_path):
+def test_export_limit_val_capped_at_10(tmp_path):
+    """In smoke mode, val is capped at min(10, available) even if more exist."""
+    wav_src = tmp_path / "wav_src"
+    wav_src.mkdir()
+    records = []
+    for i in range(35):
+        wav = wav_src / f"utt_{i:04d}.wav"
+        _make_wav(wav, 1.0)
+        records.append({
+            "audio_filepath": str(wav),
+            "text": f"Metin {i}.",
+            "normalized_text": f"metin {i}",
+            "phonemes": "m ɛ t i n",
+            "duration": 1.0,
+            "speaker_id": "issai",
+        })
+    mdir = tmp_path / "manifests"
+    mdir.mkdir()
+    _write_jsonl(mdir / "train.jsonl", records[:5])
+    _write_jsonl(mdir / "val.jsonl", records[5:])   # 30 val records available
     out = tmp_path / "piper"
-    export_piper(manifest_dir, out, limit=1)
+    export_piper(mdir, out, limit=3)
     val_stems = (out / "val.txt").read_text(encoding="utf-8").splitlines()
-    assert len(val_stems) == 1  # val is never limited
+    assert len(val_stems) == 10  # capped at SMOKE_VAL_LIMIT
+
+
+def test_export_limit_val_not_padded_when_fewer_than_10(manifest_dir, tmp_path):
+    """Smoke limit of 10 is a max, not a minimum — don't require exactly 10."""
+    out = tmp_path / "piper"
+    export_piper(manifest_dir, out, limit=2)
+    val_stems = (out / "val.txt").read_text(encoding="utf-8").splitlines()
+    assert len(val_stems) == 1  # only 1 val record available; not padded
 
 
 def test_export_limit_total_csv_rows(manifest_dir, tmp_path):
     out = tmp_path / "piper"
     export_piper(manifest_dir, out, limit=2)
     lines = (out / "metadata.csv").read_text(encoding="utf-8").splitlines()
-    # 2 train + 1 val + 1 test = 4 rows
+    # 2 train + 1 val (capped, but only 1 available) + 1 test = 4 rows
     assert len(lines) == 4
+
+
+def test_export_no_limit_val_uncapped(tmp_path):
+    """Without --limit, all val records are included regardless of count."""
+    wav_src = tmp_path / "wav_src"
+    wav_src.mkdir()
+    records = []
+    for i in range(25):
+        wav = wav_src / f"utt_{i:04d}.wav"
+        _make_wav(wav, 1.0)
+        records.append({
+            "audio_filepath": str(wav),
+            "text": f"Metin {i}.",
+            "normalized_text": f"metin {i}",
+            "phonemes": "m ɛ t i n",
+            "duration": 1.0,
+            "speaker_id": "issai",
+        })
+    mdir = tmp_path / "manifests"
+    mdir.mkdir()
+    _write_jsonl(mdir / "train.jsonl", records[:5])
+    _write_jsonl(mdir / "val.jsonl", records[5:])   # 20 val records
+    out = tmp_path / "piper"
+    export_piper(mdir, out, limit=None)  # no limit
+    val_stems = (out / "val.txt").read_text(encoding="utf-8").splitlines()
+    assert len(val_stems) == 20  # all val records included
 
 
 # ---------------------------------------------------------------------------
@@ -280,3 +333,86 @@ def test_validate_valid_record_with_real_audio(tmp_path):
     valid, errors = validate_manifest(manifest, check_audio=True)
     assert valid == 1
     assert errors == []
+
+
+# ---------------------------------------------------------------------------
+# validate_piper_export
+# ---------------------------------------------------------------------------
+
+def test_validate_piper_export_valid(manifest_dir, tmp_path):
+    out = tmp_path / "piper"
+    export_piper(manifest_dir, out)
+    valid, errors = validate_piper_export(out)
+    assert errors == []
+    assert valid == 5  # 3 train + 1 val + 1 test
+
+
+def test_validate_piper_export_missing_metadata(tmp_path):
+    piper_dir = tmp_path / "piper"
+    piper_dir.mkdir()
+    (piper_dir / "wavs").mkdir()
+    (piper_dir / "config.json").write_text("{}", encoding="utf-8")
+    # metadata.csv is absent
+    valid, errors = validate_piper_export(piper_dir)
+    assert valid == 0
+    assert any("metadata.csv" in e for e in errors)
+
+
+def test_validate_piper_export_missing_wav(tmp_path):
+    piper_dir = tmp_path / "piper"
+    piper_dir.mkdir()
+    wavs_dir = piper_dir / "wavs"
+    wavs_dir.mkdir()
+    (piper_dir / "config.json").write_text("{}", encoding="utf-8")
+    # metadata.csv references a stem with no matching wav
+    (piper_dir / "metadata.csv").write_text("ghost_stem|metin\n", encoding="utf-8")
+    valid, errors = validate_piper_export(piper_dir)
+    assert valid == 0
+    assert any("ghost_stem.wav" in e for e in errors)
+
+
+def test_validate_piper_export_empty_text(tmp_path):
+    piper_dir = tmp_path / "piper"
+    piper_dir.mkdir()
+    wavs_dir = piper_dir / "wavs"
+    wavs_dir.mkdir()
+    (piper_dir / "config.json").write_text("{}", encoding="utf-8")
+    # write metadata with an empty text column and matching wav
+    wav = wavs_dir / "utt_0000.wav"
+    _make_wav(wav, 1.0)
+    (piper_dir / "metadata.csv").write_text("utt_0000|\n", encoding="utf-8")
+    valid, errors = validate_piper_export(piper_dir)
+    assert valid == 0
+    assert any("empty text" in e for e in errors)
+
+
+def test_validate_piper_export_missing_wavs_dir(tmp_path):
+    piper_dir = tmp_path / "piper"
+    piper_dir.mkdir()
+    (piper_dir / "config.json").write_text("{}", encoding="utf-8")
+    (piper_dir / "metadata.csv").write_text("utt_0|metin\n", encoding="utf-8")
+    # wavs/ directory is absent
+    valid, errors = validate_piper_export(piper_dir)
+    assert valid == 0
+    assert any("wavs" in e for e in errors)
+
+
+# ---------------------------------------------------------------------------
+# smoke.sh existence
+# ---------------------------------------------------------------------------
+
+def test_smoke_sh_exists():
+    smoke = Path(__file__).parent.parent / "recipes" / "issai_piper" / "smoke.sh"
+    assert smoke.exists(), "recipes/issai_piper/smoke.sh must exist"
+
+
+def test_smoke_sh_is_executable_bash(tmp_path):
+    smoke = Path(__file__).parent.parent / "recipes" / "issai_piper" / "smoke.sh"
+    content = smoke.read_text(encoding="utf-8")
+    assert content.startswith("#!/usr/bin/env bash"), "smoke.sh must have bash shebang"
+    assert "export-piper" in content and "--limit" in content, \
+        "smoke.sh must call export-piper with --limit"
+    assert "piper_train.preprocess" in content, \
+        "smoke.sh must call piper_train.preprocess"
+    assert "piper_train" in content, \
+        "smoke.sh must call piper_train for training"

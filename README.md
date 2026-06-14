@@ -84,7 +84,7 @@ samples/                — Audio sample gallery (post-training)
 
 ## Current Status
 
-**Status: data frontend implemented / pre-training stage.**
+**Status: Piper training toolchain connected — smoke training next.**
 No public model weights are released yet.
 
 - [x] Repository structure
@@ -93,10 +93,19 @@ No public model weights are released yet.
 - [x] Text normalization v0.1 (numbers, abbreviations, punctuation, NFC)
 - [x] Turkish G2P v0.1 (rule-based, full IPA phoneme map)
 - [x] ISSAI manifest pipeline (local TSC + HuggingFace, Train/Dev/Test)
-- [x] Training recipe shells
+- [x] Piper export adapter (`export_piper.py`, `gokbilge-tts export-piper`)
+- [x] Piper training toolchain connected (`piper_train.preprocess` + `piper_train`)
+- [x] Training recipe shells (prepare, train, export_onnx, infer, smoke)
 - [x] Benchmark sentence set
-- [ ] First training run (Piper baseline)
+- [ ] Smoke training run (100 utterances, 5 epochs — next step)
+- [ ] Full v0.1 training run (Piper baseline)
 - [ ] Model release
+
+> **Note on phonemization:** The v0.1 Piper baseline uses `espeak-ng` Turkish (via
+> `piper_train.preprocess`) for the training phoneme path. The custom Gokbilge Turkish G2P
+> (`gokbilge_tts.g2p.turkish`) runs during manifest preparation and is stored in the
+> JSONL `phonemes` field, but is not yet wired into Piper training. Connecting our G2P
+> as the Piper phonemizer is planned for Sprint 4/5.
 
 ---
 
@@ -109,7 +118,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phased plan.
 | 0 | Repository scaffold | ✅ Done |
 | 1 | Dataset preparation | ✅ Done |
 | 2 | Turkish G2P | ✅ Done (v0.1, rule-based) |
-| 3 | Piper/VITS baseline | 🔲 Next |
+| 3 | Piper/VITS baseline | 🔄 In Progress (smoke run next) |
 | 4 | Quality improvements | 🔲 Planned |
 | 5 | Release | 🔲 Planned |
 

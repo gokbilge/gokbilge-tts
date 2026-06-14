@@ -4,15 +4,23 @@ Input:  manifest_dir/ containing train.jsonl, val.jsonl, (test.jsonl), symbols.t
 Output: out_dir/ containing:
     wavs/           — symlinks (or copies on Windows) to source audio
     metadata.csv    — LJSpeech: stem|text  (or stem|speaker|text for multi-speaker)
-    config.json     — Piper training config skeleton
+    config.json     — Piper training config skeleton (phoneme_id_map filled by preprocess)
     train.txt       — stems for training split
     val.txt         — stems for val split
-    test.txt        — stems for test split (if test.jsonl exists)
+    test.txt        — stems for test split
+
+Smoke mode (--limit N):
+    train: first N records
+    val:   first min(10, available) records
+    test:  first min(10, available) records
+    This keeps val/test representative while capping the total dataset size.
 
 Next step after this tool:
     python3 -m piper_train.preprocess \
         --language tr --input-dir <out_dir> --output-dir <training_dir> \
         --dataset-format ljspeech --single-speaker --sample-rate 22050
+    Note: preprocess writes the final config.json (with phoneme_id_map) to <training_dir>.
+    Use <training_dir>/config.json — not <out_dir>/config.json — when exporting ONNX.
 
 Usage:
     gokbilge-tts export-piper --manifest-dir ./data/manifests --out ./data/piper
@@ -34,6 +42,7 @@ log = get_logger(__name__)
 _DEFAULT_SAMPLE_RATE = 22050
 _DEFAULT_LANGUAGE = "tr"
 _PIPER_NUM_SYMBOLS = 256
+_SMOKE_VAL_LIMIT = 10   # max val/test records when --limit is active
 _PIPER_INFERENCE_DEFAULTS = {
     "noise_scale": 0.667,
     "length_scale": 1.0,
@@ -108,10 +117,13 @@ def export_piper(
     (out_dir / "wavs").mkdir(exist_ok=True)
 
     # ── Load splits ──────────────────────────────────────────────────────────
+    # In smoke mode (limit set): cap val/test at SMOKE_VAL_LIMIT so they stay
+    # proportional but don't balloon when the full corpus has thousands of records.
+    side_limit = _SMOKE_VAL_LIMIT if limit is not None else None
     split_recs: dict[str, list[dict]] = {
         "train": _read_jsonl(manifest_dir / "train.jsonl", limit=limit),
-        "val":   _read_jsonl(manifest_dir / "val.jsonl"),
-        "test":  _read_jsonl(manifest_dir / "test.jsonl"),
+        "val":   _read_jsonl(manifest_dir / "val.jsonl",   limit=side_limit),
+        "test":  _read_jsonl(manifest_dir / "test.jsonl",  limit=side_limit),
     }
 
     all_recs = [r for recs in split_recs.values() for r in recs]
@@ -182,3 +194,65 @@ def export_piper(
         "Piper export done: %d utterances | %d speaker(s) | sr=%d | lang=%s → %s",
         len(all_recs), len(speakers), sample_rate, language, out_dir,
     )
+
+
+def validate_piper_export(piper_dir: Path) -> tuple[int, list[str]]:
+    """Validate the output directory of export_piper.
+
+    Checks:
+    - metadata.csv and config.json exist
+    - wavs/ directory exists
+    - each row in metadata.csv has ≥2 columns (stem + text)
+    - each stem's wav file is present under wavs/
+    - no row has an empty text field
+
+    Args:
+        piper_dir: Directory written by export_piper().
+
+    Returns:
+        (valid_count, list_of_error_strings)
+    """
+    piper_dir = Path(piper_dir)
+    errors: list[str] = []
+    valid = 0
+
+    for required in ("metadata.csv", "config.json"):
+        if not (piper_dir / required).exists():
+            errors.append(f"missing: {required}")
+
+    wavs_dir = piper_dir / "wavs"
+    if not wavs_dir.is_dir():
+        errors.append("missing: wavs/ directory")
+
+    if errors:
+        return 0, errors
+
+    metadata_path = piper_dir / "metadata.csv"
+    for i, raw in enumerate(metadata_path.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.strip()
+        if not line:
+            continue
+        parts = line.split("|")
+        if len(parts) < 2:
+            errors.append(f"metadata.csv line {i}: too few columns")
+            continue
+
+        stem = parts[0].strip()
+        text = parts[-1].strip()
+
+        if not stem:
+            errors.append(f"metadata.csv line {i}: empty stem")
+            continue
+
+        if not text:
+            errors.append(f"metadata.csv line {i}: empty text for stem {stem!r}")
+            continue
+
+        wav_path = wavs_dir / f"{stem}.wav"
+        if not wav_path.exists():
+            errors.append(f"metadata.csv line {i}: wavs/{stem}.wav not found")
+            continue
+
+        valid += 1
+
+    return valid, errors
