@@ -1,0 +1,31 @@
+{
+  "audio": {
+    "sample_rate": 22050,
+    "quality": "medium"
+  },
+  "espeak": {
+    "voice": "tr"
+  },
+  "inference": {
+    "noise_scale": 0.667,
+    "length_scale": 1.0,
+    "noise_scale_w": 0.8
+  },
+  "phoneme_type": "espeak",
+  "phoneme_map": {},
+  "phoneme_id_map": {},
+  "language": {
+    "code": "tr",
+    "family": "Turkic",
+    "region": "TR",
+    "name_native": "Türkçe",
+    "name_english": "Turkish",
+    "country_english": "Turkey"
+  },
+  "dataset": "issai_tr",
+  "num_speakers": 1,
+  "speaker_id_map": {},
+  "model_type": "vits",
+  "piper_version": "1.0.0",
+  "_comment": "Config for gokbilge-tts v0.1 Piper-compatible model. phoneme_id_map populated after training."
+}

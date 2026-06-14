@@ -1,0 +1,31 @@
+CLAUDE.md
+AGENTS.md
+
+# Secrets
+*.env
+*.key
+*.pem
+secrets/
+
+# Model weights and checkpoints (large binaries)
+checkpoints/
+*.safetensors
+*.pt
+*.bin
+*.ckpt
+
+# Dataset tokens (large)
+*_tokens/
+*.npy
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Audio outputs (use samples/ for tracked ones)
+eval_output/
+eval_*/
+/tmp/
