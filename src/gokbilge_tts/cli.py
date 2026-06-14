@@ -42,13 +42,17 @@ def phonemize(
 
 @app.command("prepare-issai")
 def prepare_issai(
-    dataset_dir: Path = typer.Option(..., "--dataset-dir", help="Path to local ISSAI dataset"),
+    dataset_dir: Optional[Path] = typer.Option(
+        None, "--dataset-dir",
+        help="Local ISSAI directory (Train/Dev/Test subdirs). Omit to load from HuggingFace.",
+    ),
     out: Path = typer.Option(..., "--out", help="Output directory for manifests"),
 ) -> None:
     """Prepare ISSAI Turkish Speech Corpus manifests for training."""
     from gokbilge_tts.datasets.prepare_issai import prepare
 
-    console.print(f"Preparing ISSAI dataset from [bold]{dataset_dir}[/bold]...")
+    src = str(dataset_dir) if dataset_dir else "HuggingFace"
+    console.print(f"Preparing ISSAI from [bold]{src}[/bold]…")
     prepare(dataset_dir=dataset_dir, output_dir=out)
     console.print(f"Manifests written to [bold]{out}[/bold]")
 

@@ -84,20 +84,17 @@ samples/                — Audio sample gallery (post-training)
 
 ## Current Status
 
-**Status: repository scaffold / pre-training stage.**
+**Status: data frontend implemented / pre-training stage.**
 No public model weights are released yet.
 
 - [x] Repository structure
 - [x] Python package skeleton
 - [x] CLI skeleton
-- [x] Text normalization placeholders
-- [x] Turkish G2P placeholders
-- [x] Dataset preparation placeholders
+- [x] Text normalization v0.1 (numbers, abbreviations, punctuation, NFC)
+- [x] Turkish G2P v0.1 (rule-based, full IPA phoneme map)
+- [x] ISSAI manifest pipeline (local TSC + HuggingFace, Train/Dev/Test)
 - [x] Training recipe shells
 - [x] Benchmark sentence set
-- [ ] Turkish G2P implementation
-- [ ] Text normalization implementation
-- [ ] ISSAI dataset pipeline
 - [ ] First training run (Piper baseline)
 - [ ] Model release
 
@@ -110,9 +107,9 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the full phased plan.
 | Phase | Goal | Status |
 |-------|------|--------|
 | 0 | Repository scaffold | ✅ Done |
-| 1 | Dataset preparation | 🔲 Next |
-| 2 | Turkish G2P | 🔲 Planned |
-| 3 | Piper/VITS baseline | 🔲 Planned |
+| 1 | Dataset preparation | ✅ Done |
+| 2 | Turkish G2P | ✅ Done (v0.1, rule-based) |
+| 3 | Piper/VITS baseline | 🔲 Next |
 | 4 | Quality improvements | 🔲 Planned |
 | 5 | Release | 🔲 Planned |
 
