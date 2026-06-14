@@ -32,7 +32,7 @@ GRAPHEME_TO_PHONEME: dict[str, str] = {
     "d": "d",
     "f": "f",
     "g": "g",
-    # ğ handled separately (context-dependent)
+    "ğ": "",   # context-dependent (handled by _handle_soft_g); entry satisfies completeness check
     "h": "h",
     "j": "ʒ",
     "k": "k",    # TODO: palatalize to /c/ before front vowels

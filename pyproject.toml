@@ -44,6 +44,9 @@ dependencies = [
 phonemizer = [
   "phonemizer>=3.2",
 ]
+train = [
+  "piper-train>=1.0.0",
+]
 dev = [
   "pytest>=7.0",
   "pytest-cov",
