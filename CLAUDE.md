@@ -91,6 +91,28 @@ Rules:
 
 ---
 
+## Training Stop Policy
+
+Full training does not finish by reaching 10,000 epochs.
+`--max_epochs 10000` is only a safety ceiling.
+
+Training is evaluated by step milestones:
+- 50k: early noise/speech-shape check
+- 100k: first early intelligibility check
+- 200k: Turkish phoneme/prosody check
+- 300k: continue/adjust decision
+- 500k: v0.1 candidate check
+- 800k: stop/retrain/architecture decision
+
+Stop training when:
+- benchmark samples plateau,
+- audio quality is sufficient for v0.1,
+- or 800k steps still fails to produce usable speech.
+
+Do not wait for 10,000 epochs.
+
+---
+
 ## Samples Convention
 
 `samples/` holds audio outputs for each training milestone, named `NN_<label>/` so they sort chronologically:
