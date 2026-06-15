@@ -4,6 +4,20 @@ Guidelines for working on this project.
 
 ---
 
+## Project Roadmap
+
+| Version | Goal |
+|---|---|
+| **v0.1** | Piper/VITS + espeak-ng Turkish baseline — current run (`v0_1_full_001`) |
+| **v0.2** | Gokbilge custom Turkish G2P integration (replace espeak-ng phonemizer) |
+| **v0.3** | Better normalization + prosody + Turkish stress rules |
+| **v0.4** | Alternative architecture exploration: StyleTTS2 / VITS2 / Matcha-TTS |
+| **v1.0** | Best quality + clean model release |
+
+Each version builds on the previous. v0.1 establishes the training pipeline and quality baseline. v0.2 is the first point where Turkish-specific improvements land. Do not skip to v0.4 architecture experiments before v0.2–v0.3 improvements are evaluated.
+
+---
+
 ## Repository Layout
 
 ```
