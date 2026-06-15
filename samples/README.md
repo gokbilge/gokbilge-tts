@@ -16,14 +16,23 @@ Directories are numbered so they sort chronologically. Each training milestone g
 
 ```
 samples/
-  01_smoke_test/                — 5-epoch smoke run (noise; pipeline check only)
-  02_v0_1_full_step012k/        — v0.1 epoch 1 (~12k steps): last.ckpt alive?
-  03_v0_1_full_step050k/        — v0.1 ~50k steps: noise → speech-like?
-  04_v0_1_full_step100k/        — v0.1 ~100k steps: first speech-like expected
-  05_v0_1_full_step200k/        — v0.1 ~200k steps: Turkish phonemes distinct?
-  06_v0_1_full_step300k/        — v0.1 ~300k steps: continue / stop decision
-  07_v0_1_full_step500k/        — v0.1 candidate check
-  08_v0_1_full_step800k/        — stop / retrain / architecture decision
+  01_smoke_test/                — 5-epoch smoke run (noise; pipeline only)
+  02_v0_1_full_step010k/        — 10k steps
+  03_v0_1_full_step020k/        — 20k steps
+  04_v0_1_full_step050k/        — 50k  (noise → speech-like?)
+  05_v0_1_full_step080k/        — 80k
+  06_v0_1_full_step100k/        — 100k (first speech-like expected)
+  07_v0_1_full_step120k/        — 120k
+  08_v0_1_full_step140k/        — 140k
+  09_v0_1_full_step160k/        — 160k
+  10_v0_1_full_step200k/        — 200k (Turkish phonemes distinct?)
+  11_v0_1_full_step250k/        — 250k
+  12_v0_1_full_step300k/        — 300k (continue / stop decision)
+  13_v0_1_full_step400k/        — 400k
+  14_v0_1_full_step500k/        — 500k (v0.1 candidate check)
+  15_v0_1_full_step600k/        — 600k
+  16_v0_1_full_step700k/        — 700k
+  17_v0_1_full_step800k/        — 800k (stop / retrain / architecture)
 ```
 
 Each directory contains 5 WAVs: `s1_bugun_hava.wav` … `s5_sirket.wav` (fixed benchmark sentences).

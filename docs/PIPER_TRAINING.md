@@ -241,13 +241,25 @@ The `recipes/issai_piper/` directory provides wrapper scripts:
 
 | Step | Sample dir | What to check |
 |---|---|---|
-| ~12k (epoch 1) | `02_v0_1_full_step012k` | Pipeline alive; `last.ckpt` exists |
-| ~50k | `03_v0_1_full_step050k` | Noise → speech-like structure? |
-| ~100k | `04_v0_1_full_step100k` | First speech-like output expected |
-| ~200k | `05_v0_1_full_step200k` | Turkish phonemes distinct? |
-| ~300k | `06_v0_1_full_step300k` | Continue / adjust / stop decision |
-| ~500k | `07_v0_1_full_step500k` | v0.1 candidate check |
-| ~800k | `08_v0_1_full_step800k` | Stop / retrain / architecture decision |
+| ~10k | `02_v0_1_full_step010k` | Pipeline alive; any structure? |
+| ~20k | `03_v0_1_full_step020k` | Early noise shape |
+| ~50k | `04_v0_1_full_step050k` | Noise → speech-like? |
+| ~80k | `05_v0_1_full_step080k` | Rhythm emerging? |
+| ~100k | `06_v0_1_full_step100k` | First speech-like output expected |
+| ~120k | `07_v0_1_full_step120k` | Phoneme clarity improving? |
+| ~140k | `08_v0_1_full_step140k` | — |
+| ~160k | `09_v0_1_full_step160k` | — |
+| ~200k | `10_v0_1_full_step200k` | Turkish phonemes distinct? |
+| ~250k | `11_v0_1_full_step250k` | — |
+| ~300k | `12_v0_1_full_step300k` | Continue / adjust / stop decision |
+| ~400k | `13_v0_1_full_step400k` | — |
+| ~500k | `14_v0_1_full_step500k` | v0.1 candidate check |
+| ~600k–700k | `15–16_…` | — |
+| ~800k | `17_v0_1_full_step800k` | Stop / retrain / architecture decision |
+
+Evaluations run **automatically** via `tools/auto_eval.sh` (launched once at training start).
+Each milestone fires `eval_step.sh` when the step count is first crossed; already-completed
+milestones are detected by WAV presence and skipped (safe to restart).
 
 ### Quality thresholds
 

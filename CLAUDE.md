@@ -134,13 +134,22 @@ Do not wait for 10,000 epochs.
 ```
 samples/
   01_smoke_test/              — 5-epoch smoke run (noise; pipeline check only)
-  02_v0_1_full_step012k/      — v0.1 epoch 1 check (~12k steps; last.ckpt exists?)
-  03_v0_1_full_step050k/      — v0.1 ~50k steps (noise → speech-like?)
-  04_v0_1_full_step100k/      — v0.1 ~100k steps (first speech-like expected)
-  05_v0_1_full_step200k/      — v0.1 ~200k steps (Turkish phonemes distinct?)
-  06_v0_1_full_step300k/      — v0.1 ~300k steps (continue/stop decision)
-  07_v0_1_full_step500k/      — v0.1 candidate check
-  08_v0_1_full_step800k/      — stop/retrain/architecture decision
+  02_v0_1_full_step010k/      — v0.1 ~10k steps
+  03_v0_1_full_step020k/      — v0.1 ~20k steps
+  04_v0_1_full_step050k/      — v0.1 ~50k steps (noise → speech-like?)
+  05_v0_1_full_step080k/      — v0.1 ~80k steps
+  06_v0_1_full_step100k/      — v0.1 ~100k steps (first speech-like expected)
+  07_v0_1_full_step120k/      — v0.1 ~120k steps
+  08_v0_1_full_step140k/      — v0.1 ~140k steps
+  09_v0_1_full_step160k/      — v0.1 ~160k steps
+  10_v0_1_full_step200k/      — v0.1 ~200k steps (Turkish phonemes distinct?)
+  11_v0_1_full_step250k/      — v0.1 ~250k steps
+  12_v0_1_full_step300k/      — v0.1 ~300k steps (continue/stop decision)
+  13_v0_1_full_step400k/      — v0.1 ~400k steps
+  14_v0_1_full_step500k/      — v0.1 candidate check
+  15_v0_1_full_step600k/      — ...
+  16_v0_1_full_step700k/      — ...
+  17_v0_1_full_step800k/      — stop/retrain/architecture decision
   ...
 ```
 
