@@ -39,6 +39,7 @@ def main() -> None:
         sys.exit(1)
 
     model_onnx, output_wav, text = sys.argv[1], sys.argv[2], sys.argv[3]
+    model_onnx = os.path.abspath(model_onnx)
 
     if not os.path.exists(model_onnx):
         print(f"ERROR: model not found: {model_onnx}", file=sys.stderr)
