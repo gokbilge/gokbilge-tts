@@ -18,6 +18,7 @@
 #       <run_dir>/training \
 #       gokbilge_tr_smoke
 set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
 
 ISSAI_DIR="${1:?Usage: smoke.sh <issai_dir> <run_dir>}"
 RUN_DIR="${2:?Usage: smoke.sh <issai_dir> <run_dir>}"

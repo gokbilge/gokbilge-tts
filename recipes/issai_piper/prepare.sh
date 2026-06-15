@@ -2,6 +2,7 @@
 # prepare.sh — Build ISSAI manifests, validate, and export to Piper LJSpeech format
 # Usage: bash prepare.sh <issai_corpus_dir> <manifest_dir> <piper_dir>
 set -euo pipefail
+export PATH="$HOME/.local/bin:$PATH"
 
 CORPUS_DIR="${1:?Usage: prepare.sh <corpus_dir> <manifest_dir> <piper_dir>}"
 MANIFEST_DIR="${2:?Usage: prepare.sh <corpus_dir> <manifest_dir> <piper_dir>}"
