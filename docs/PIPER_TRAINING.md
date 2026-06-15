@@ -192,12 +192,28 @@ cp ./data/training/config.json ./models/gokbilge_tr_v0_1.onnx.json
 
 ### 7. Synthesize
 
+Use `infer.sh`, which defaults to `piper_train.infer_onnx` (no external binary required):
+
 ```bash
-echo "Bugün hava çok güzel." | piper \
-    --model ./models/gokbilge_tr_v0_1.onnx \
-    --config ./models/gokbilge_tr_v0_1.onnx.json \
-    --output_file output.wav
+bash recipes/issai_piper/infer.sh \
+    ./models/gokbilge_tr_v0_1 \
+    "Bugün hava çok güzel." \
+    output.wav
 ```
+
+To use the external `piper` CLI binary instead (must be on PATH):
+
+```bash
+PIPER_BACKEND=piper bash recipes/issai_piper/infer.sh \
+    ./models/gokbilge_tr_v0_1 \
+    "Bugün hava çok güzel." \
+    output.wav
+```
+
+> **`piper` binary:** Not installed on the current server. The `infer_onnx` backend
+> (via `tools/piper_infer.py`) produces identical output using OnnxRuntime directly.
+> Install the piper binary from https://github.com/rhasspy/piper/releases if
+> the CLI interface is needed (e.g. streaming or real-time use).
 
 ---
 
@@ -210,7 +226,7 @@ The `recipes/issai_piper/` directory provides wrapper scripts:
 | `prepare.sh` | 1–3 | `bash prepare.sh <corpus> <manifests> <piper>` |
 | `train.sh` | 4–5 | `bash train.sh <piper> <training> <checkpoints>` |
 | `export_onnx.sh` | 6 | `bash export_onnx.sh <ckpt> <training_dir> <model_name>` |
-| `infer.sh` | 7 | `bash infer.sh <model_base> <text> <output.wav>` |
+| `infer.sh` | 7 | `bash infer.sh <model_base> <text> <output.wav>` (default: `infer_onnx` backend; set `PIPER_BACKEND=piper` for CLI) |
 | `smoke.sh` | 1–5 (100 utts) | `bash smoke.sh <issai_dir> <run_dir>` |
 
 ---
@@ -220,10 +236,17 @@ The `recipes/issai_piper/` directory provides wrapper scripts:
 To verify the full pipeline on 100 utterances before a full training run:
 
 ```bash
-bash recipes/issai_piper/smoke.sh /home/hcfk/datasets/ISSAI ./runs/smoke
+bash recipes/issai_piper/smoke.sh \
+    /home/hcfk/datasets/ISSAI/ISSAI_TSC_218 \
+    ./runs/smoke_001
 ```
 
+Use the run naming convention: `runs/smoke_NNN/` (see CLAUDE.md § Run Naming Convention).
+
 This runs steps 1–5 with `--limit 100` (100 train + up to 10 val + up to 10 test utterances) and 5 training epochs. It does not run ONNX export automatically.
+
+**Do not start full training until the smoke run report is committed** (`docs/SMOKE_RUN_REPORT.md`).
+The smoke run for this project is documented and passed — see `docs/SMOKE_RUN_REPORT.md`.
 
 ### Smoke mode limits
 

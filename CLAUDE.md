@@ -70,14 +70,35 @@ Write numbers as words. Digits may fall back to non-Turkish phoneme behavior.
 
 ---
 
+## Run Naming Convention
+
+Run directories live under `runs/` (never committed — in `.gitignore`):
+
+```
+runs/
+  smoke_001/        — first smoke run
+  smoke_002/        — second smoke run (if needed)
+  v0_1_full_001/    — first full v0.1 training run
+  v0_1_full_002/    — resume or retry of v0.1
+```
+
+Rules:
+- Smoke runs: `runs/smoke_NNN/`
+- Full training runs: `runs/<version>_full_NNN/`
+- Never reuse a run directory. Increment the suffix.
+- Never commit `runs/`, checkpoints, ONNX files, generated WAVs, or dataset outputs.
+- The current smoke run is `runs/smoke/` (retroactively `smoke_001`). New runs start at `smoke_002`.
+
+---
+
 ## Samples Convention
 
 `samples/` holds audio outputs for each training milestone, named `NN_<label>/` so they sort chronologically:
 
 ```
 samples/
-  01_smoke_test/    — 5-epoch smoke run (noise; pipeline check only)
-  02_<next>/        — next milestone
+  01_smoke_test/        — 5-epoch smoke run (noise; pipeline check only)
+  02_v0_1_full_eval/    — first real v0.1 evaluation
   ...
 ```
 
