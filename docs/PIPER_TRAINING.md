@@ -231,6 +231,55 @@ The `recipes/issai_piper/` directory provides wrapper scripts:
 
 ---
 
+## Training Stop Policy
+
+`--max_epochs 10000` in `train.sh` is a safety ceiling, not a training target. With 178k utterances and batch_size=16, each epoch takes ~3 hours; 10,000 epochs would take ~3.4 years.
+
+**Real stop criterion:** perceptual quality plateau, evaluated at step milestones using `tools/eval_step.sh`.
+
+### Step milestone evaluation
+
+| Step | Sample dir | What to check |
+|---|---|---|
+| ~12k (epoch 1) | `02_v0_1_full_step012k` | Pipeline alive; `last.ckpt` exists |
+| ~50k | `03_v0_1_full_step050k` | Noise → speech-like structure? |
+| ~100k | `04_v0_1_full_step100k` | First speech-like output expected |
+| ~200k | `05_v0_1_full_step200k` | Turkish phonemes distinct? |
+| ~300k | `06_v0_1_full_step300k` | Continue / adjust / stop decision |
+| ~500k | `07_v0_1_full_step500k` | v0.1 candidate check |
+| ~800k | `08_v0_1_full_step800k` | Stop / retrain / architecture decision |
+
+### Quality thresholds
+
+- 0–50k: noise is normal
+- 50k–100k: murmur / rhythm may emerge
+- 100k–200k: speech-like output expected
+- 200k–500k: intelligibility should arrive
+- 500k–800k: meaningful quality evaluation
+
+### Stop conditions
+
+Stop training when any of the following is true:
+- Benchmark samples plateau (no improvement between consecutive milestones)
+- Audio quality is sufficient for v0.1
+- 800k steps still fails to produce usable speech (architecture/data decision needed)
+
+### Evaluation command
+
+```bash
+# Run from repo root on the server:
+bash tools/eval_step.sh <sample_dir> [run_dir]
+
+# Examples:
+bash tools/eval_step.sh 02_v0_1_full_step012k runs/v0_1_full_001   # epoch 1 check
+bash tools/eval_step.sh 04_v0_1_full_step100k runs/v0_1_full_001   # 100k step check
+```
+
+Exports ONNX from `last.ckpt` and generates all 5 benchmark WAVs in one command.
+`last.ckpt` is updated after every epoch — safe to export without stopping training.
+
+---
+
 ## Smoke Run
 
 To verify the full pipeline on 100 utterances before a full training run:
