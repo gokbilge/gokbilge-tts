@@ -12,28 +12,28 @@ Audio samples generated from the fixed benchmark sentences (CLAUDE.md § Evaluat
 
 ## Directory structure
 
+Directories are numbered so they sort chronologically. Each training milestone gets its own directory.
+
 ```
 samples/
-  smoke/                    — 5-epoch smoke run (pipeline correctness only; audio is noise)
+  01_smoke_test/            — 5-epoch smoke run (pipeline correctness only; audio is noise)
     s1_bugun_hava.wav
     s2_turkiye_cumh.wav
     s3_cocuklar.wav
     s4_ogrenciler.wav
     s5_sirket.wav
-  v0.1/                     — first real release (not yet trained)
-    s1_bugun_hava.wav
+  02_<next_milestone>/      — e.g. first full training checkpoint
     ...
 ```
 
 ## Convention
 
-- **smoke/**: Committed. Generated from the smoke checkpoint (`epoch=4`, 100 utterances). Audio is
-  noise — these files exist only to confirm end-to-end pipeline correctness (inference produces
-  audio of the right length, phoneme IDs round-trip correctly). Do not evaluate quality here.
-- **vX.Y/**: Production release samples. Committed when a model is released to HuggingFace.
-  These are also available on the HuggingFace model page.
+- Directories are prefixed `NN_` (01, 02, …) so they sort in training order.
+- Each directory gets a metadata block in this README (model, checkpoint, date, RTF).
+- **Smoke / diagnostic runs** (`01_smoke_test`, etc.): committed; audio quality not evaluated.
+- **Production releases**: also committed here and mirrored on the HuggingFace model page.
 
-## Smoke sample metadata (2026-06-15)
+## 01_smoke_test — metadata (2026-06-15)
 
 | File | Text | Duration | RTF |
 |---|---|---|---|
