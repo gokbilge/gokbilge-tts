@@ -26,23 +26,52 @@ Development has moved to [OHF-Voice/piper1-gpl](https://github.com/OHF-Voice/pip
 # 1. System dependencies
 sudo apt-get install espeak-ng espeak-ng-data python3-dev build-essential
 
-# 2. Install piper_train from source (not on PyPI)
-git clone https://github.com/rhasspy/piper /opt/piper-src
-cd /opt/piper-src/src/python
-pip3 install -e . --break-system-packages
-bash build_monotonic_align.sh   # compiles Cython extension required for training
+# 2. piper_phonemize stub (aarch64 only — no wheel on PyPI, C++ build requires OnnxRuntime headers)
+#    Deploy the pure-Python stub from tools/piper_phonemize_stub.py:
+cp tools/piper_phonemize_stub.py \
+    $(python3 -c "import site; print(site.getusersitepackages())")/piper_phonemize.py
 
-# 3. Install Gokbilge TTS (dev tools only; piper-train handled above)
+# 3. Install pytorch-lightning and other piper_train deps (without piper-phonemize or torch version pin)
+pip3 install 'pytorch-lightning>=2.0,<2.4' Cython librosa onnxscript --break-system-packages
+
+# 4. Install piper_train from source (not on PyPI)
+git clone https://github.com/rhasspy/piper /home/hcfk/piper-src
+cd /home/hcfk/piper-src/src/python
+pip3 install -e . --no-deps --break-system-packages
+
+# Build the Cython monotonic_align extension (required for training)
+export PATH=$PATH:~/.local/bin
+cd piper_train/vits/monotonic_align && mkdir -p monotonic_align && cythonize -i core.pyx && mv core*.so monotonic_align/
+
+# 5. Apply compatibility patches for pytorch-lightning 2.x + PyTorch 2.6+ (see TRAINING_LOG.md 2026-06-15)
+#    Run these from the piper-src repo root. Patches are in tools/:
+python3 tools/piper_main_patch.py          # overwrites piper_train/__main__.py
+python3 tools/patch_lightning.py /home/hcfk/piper-src/src/python/piper_train/vits/lightning.py
+python3 tools/patch_export_onnx.py  /home/hcfk/piper-src/src/python/piper_train/export_onnx.py
+python3 tools/patch_export_onnx2.py /home/hcfk/piper-src/src/python/piper_train/export_onnx.py
+python3 tools/patch_export_onnx3.py /home/hcfk/piper-src/src/python/piper_train/export_onnx.py
+
+# 6. Install Gokbilge TTS dev tools
 cd /path/to/gokbilge-tts
 pip3 install -e ".[dev]" --break-system-packages
 
-# 4. Install Piper inference binary (for infer.sh / synthesis)
-# Download from https://github.com/rhasspy/piper/releases and add to PATH
+# 7. Inference: use piper_train.infer_onnx (piper binary not required)
+#    See tools/synth_test.py for a working example.
 ```
 
 > **Note:** `pip install -e ".[train]"` does not install piper_train — the `[train]`
 > extra is intentionally empty because piper_train is not published on PyPI.
-> Always follow step 2 above for the training toolchain.
+> Always follow steps 3–5 above for the training toolchain.
+
+### Compatibility patches summary (for PyTorch 2.12 / pytorch-lightning 2.3)
+
+| File patched | Why |
+|---|---|
+| `piper_train/__main__.py` | `Trainer.add_argparse_args` / `from_argparse_args` removed in lightning 2.0 |
+| `piper_train/vits/lightning.py` | `training_step(optimizer_idx)` removed in lightning 2.0; requires manual optimization |
+| `piper_train/export_onnx.py` (3 patches) | `torch.load` `weights_only=True` default; dynamo exporter fails on VITS; model must be moved to CPU before export |
+
+All patches are idempotent Python scripts in `tools/`. See `TRAINING_LOG.md` § 2026-06-15 for full root-cause analysis.
 
 ---
 
@@ -256,8 +285,14 @@ A successful smoke run means the pipeline is wired correctly. Audio quality at 5
 | `wavs/<stem>.wav` not found | Symlinks broken (moved corpus after export) or Windows privilege issue | Re-run `export-piper` with corpus in place; use `--limit` to test |
 | Audio resampling warning | ISSAI is 16 kHz but config says 22050 Hz | This is expected; preprocess handles resampling |
 | `CUDA error` / `device not found` | GPU unavailable | Change `--accelerator gpu` to `--accelerator cpu` in smoke.sh or train.sh |
-| `piper_train` not found | `piper-train` not installed | `pip install -e ".[train]"` |
+| `piper_train` not found | `piper-train` not installed from source | Follow Installation § 3–4 above |
 | Empty `phoneme_id_map` in ONNX config | Copied `piper_dir/config.json` instead of `training_dir/config.json` | Use `training_dir/config.json`; it is filled by preprocess |
+| `No module named 'piper_phonemize'` | C extension not available on aarch64 | Deploy `tools/piper_phonemize_stub.py` to site-packages (see Installation § 2) |
+| `AttributeError: Trainer has no attribute 'add_argparse_args'` | lightning 2.x removed these methods | Apply `tools/piper_main_patch.py` (see Installation § 5) |
+| `RuntimeError: Training with multiple optimizers …` | lightning 2.x requires manual optimization | Apply `tools/patch_lightning.py` (see Installation § 5) |
+| `UnpicklingError: GLOBAL pathlib.PosixPath` on export | torch 2.6+ `weights_only=True` default | Apply `tools/patch_export_onnx.py` (see Installation § 5) |
+| `TorchExportError: Unhandled FakeTensor Device Propagation` on export | dynamo exporter fails on VITS mixed-device | Apply `tools/patch_export_onnx2.py` (see Installation § 5) |
+| `RuntimeError: Expected all tensors on same device` on export | model on CUDA, dummy inputs on CPU | Apply `tools/patch_export_onnx3.py` (see Installation § 5) |
 
 ---
 
