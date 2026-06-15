@@ -34,7 +34,8 @@ python3 -m piper_train \
     --resume_from_checkpoint latest \
     --checkpoint-epochs 100 \
     --precision 32 \
+    --default_root_dir "$CHECKPOINT_DIR" \
     2>&1 | tee "$CHECKPOINT_DIR/train.log"
 
 echo "[train] Done. Checkpoints in $CHECKPOINT_DIR"
-echo "[train] Next: bash export_onnx.sh <checkpoint.ckpt> $PIPER_DIR <output_name>"
+echo "[train] Next: bash recipes/issai_piper/export_onnx.sh <checkpoint.ckpt> $TRAINING_DIR <output_name>"

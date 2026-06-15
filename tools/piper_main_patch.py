@@ -73,7 +73,12 @@ def main():
         default_root_dir=args.default_root_dir,
     )
     if args.checkpoint_epochs is not None:
-        trainer.callbacks = [ModelCheckpoint(every_n_epochs=args.checkpoint_epochs)]
+        trainer.callbacks = [
+            ModelCheckpoint(
+                every_n_epochs=args.checkpoint_epochs,
+                save_last=True,  # keeps last.ckpt for --resume_from_checkpoint latest
+            )
+        ]
         _LOGGER.debug(
             "Checkpoints will be saved every %s epoch(s)", args.checkpoint_epochs
         )
@@ -131,8 +136,20 @@ def main():
             "Successfully converted single-speaker checkpoint to multi-speaker"
         )
 
-    # lightning 2.x: resume via ckpt_path kwarg to fit(), not Trainer constructor
+    # lightning 2.x: resume via ckpt_path kwarg to fit(), not Trainer constructor.
+    # "latest"/"last" from train.sh are resolved here: search for last.ckpt under
+    # default_root_dir so first runs start fresh without crashing.
     ckpt_path = args.resume_from_checkpoint or None
+    if ckpt_path in ("latest", "last"):
+        from glob import glob
+        hits = glob(
+            str(Path(args.default_root_dir) / "**" / "last.ckpt"), recursive=True
+        )
+        ckpt_path = hits[0] if hits else None
+        if ckpt_path:
+            _LOGGER.info("Resuming from: %s", ckpt_path)
+        else:
+            _LOGGER.info("No last.ckpt found — starting from scratch")
     trainer.fit(model, ckpt_path=ckpt_path)
 
 

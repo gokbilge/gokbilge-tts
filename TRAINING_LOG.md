@@ -87,3 +87,61 @@ bash recipes/issai_piper/smoke.sh \
 **Next step:** Full training run (ISSAI full 178k utterances, ~10k epochs). See `docs/PIPER_TRAINING.md`.
 
 ---
+
+## 2026-06-15 — Full Training Run v0_1_full_001
+
+**Purpose:** Full VITS training on the complete ISSAI Turkish corpus (178,901 utterances) to produce the v0.1 Turkish TTS model. First checkpoint at epoch 100 will be used for audio quality assessment.
+
+**Commands:**
+```bash
+cd /home/hcfk/gokbilge-tts
+git pull && git status
+
+mkdir -p runs/v0_1_full_001
+
+bash recipes/issai_piper/prepare.sh \
+    /home/hcfk/datasets/ISSAI/ISSAI_TSC_218 \
+    runs/v0_1_full_001/manifests \
+    runs/v0_1_full_001/piper
+
+bash recipes/issai_piper/train.sh \
+    runs/v0_1_full_001/piper \
+    runs/v0_1_full_001/training \
+    runs/v0_1_full_001/checkpoints
+```
+
+**Hyperparameters (train.sh defaults):**
+
+| Parameter | Value | Rationale |
+|---|---|---|
+| Dataset | 178,901 utterances (full ISSAI) | No `--limit`; smoke confirmed full pipeline |
+| `--batch-size` | 16 | 4× smoke size; minimum practical for VITS stability |
+| `--max_epochs` | 10,000 | Standard piper target; first quality check at epoch 100 |
+| `--checkpoint-epochs` | 100 | ~1.12M steps per save; `save_last=True` gives epoch-granularity resume |
+| `--precision` | 32 | fp32 for stable first run; reduces debugging surface vs mixed precision |
+| `--accelerator` | gpu | NVIDIA GB10 on server (CUDA 13.0) |
+| `--devices` | 1 | Single GPU |
+| `--validation-split` | 0.0 | All data used for training |
+| `--num-test-examples` | 0 | No per-epoch inference during training |
+| `--resume_from_checkpoint` | latest | Auto-resume from `last.ckpt` if run is interrupted |
+| `--default_root_dir` | `runs/v0_1_full_001/checkpoints` | New (fixed in train.sh): ensures checkpoints land in the expected directory |
+| Model quality | medium (default) | hidden=192, inter=192, filter=768, n_layers=6, n_heads=2 |
+| Learning rate | 2e-4 (default) | Standard Adam LR for VITS |
+
+**Steps per epoch (estimated):** ceil(178,901 / 16) = 11,182 batches/epoch
+
+**Pre-run changes committed in this session:**
+- `tools/piper_main_patch.py`: added `save_last=True` to `ModelCheckpoint`; "latest"/"last" in `--resume_from_checkpoint` now resolves by searching for `last.ckpt` under `default_root_dir` (start fresh on first run instead of crashing)
+- `recipes/issai_piper/train.sh`: added `--default_root_dir "$CHECKPOINT_DIR"` so checkpoints go to `runs/v0_1_full_001/checkpoints/`, not inside `training/`
+- Server: `piper_train/__main__.py` re-deployed with updated patch (via `tools/piper_main_patch.py`)
+
+**First audit criteria (after epoch 99 checkpoint):**
+1. `find runs/v0_1_full_001/checkpoints -name "*.ckpt"` — checkpoint exists
+2. `tail -50 runs/v0_1_full_001/checkpoints/train.log` — losses not NaN, both gen/disc decreasing
+3. `python3 -c "import json; d=json.load(open('runs/v0_1_full_001/training/config.json')); print(len(d['phoneme_id_map']))"` — must print 159
+4. `nvidia-smi` — GPU not OOM at batch_size=16
+5. ONNX export from epoch-99 checkpoint + synthesis of all 5 benchmark sentences
+
+**Result:** (to be filled after first checkpoint)
+
+---
