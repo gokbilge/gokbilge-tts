@@ -94,3 +94,17 @@ RTF will change with a fully trained model (larger activations from longer outpu
 ## Smoke Run Expectations
 
 At 5 epochs with 100 utterances, the model outputs noise. This is expected and correct — it only verifies that the pipeline is wired, not that audio quality is acceptable. Audio becomes intelligible after hundreds to thousands of epochs on the full corpus.
+
+---
+
+## Samples Directory Convention
+
+`samples/` uses numbered subdirectories (`NN_<label>/`) so milestones sort chronologically and are never overwritten. Each directory holds the 5 fixed benchmark WAVs. Smoke/diagnostic samples are committed even when audio is noise — the point is confirming the pipeline produces audio of the right duration, not evaluating quality.
+
+```
+samples/
+  01_smoke_test/    — epoch=4, 100 utterances (2026-06-15)
+  02_<next>/        — next evaluation milestone
+```
+
+When adding a new milestone: create the next `NN_` directory, generate all 5 WAVs, and add a metadata block to `samples/README.md`.
