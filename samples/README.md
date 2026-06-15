@@ -16,22 +16,24 @@ Directories are numbered so they sort chronologically. Each training milestone g
 
 ```
 samples/
-  01_smoke_test/            — 5-epoch smoke run (pipeline correctness only; audio is noise)
-    s1_bugun_hava.wav
-    s2_turkiye_cumh.wav
-    s3_cocuklar.wav
-    s4_ogrenciler.wav
-    s5_sirket.wav
-  02_<next_milestone>/      — e.g. first full training checkpoint
-    ...
+  01_smoke_test/                — 5-epoch smoke run (noise; pipeline check only)
+  02_v0_1_full_step050k/        — v0.1 full training, ~50k steps  (noise→speech-like?)
+  03_v0_1_full_step100k/        — v0.1 full training, ~100k steps (first speech-like)
+  04_v0_1_full_step200k/        — v0.1 full training, ~200k steps (phonemes distinct?)
+  05_v0_1_full_step300k/        — v0.1 full training, ~300k steps (continue/stop?)
+  06_v0_1_full_step500k+/       — v0.1 quality decision
 ```
+
+Each directory contains 5 WAVs: `s1_bugun_hava.wav` … `s5_sirket.wav` (fixed benchmark sentences).
+
+Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `last.ckpt` and runs all 5 sentences automatically.
 
 ## Convention
 
 - Directories are prefixed `NN_` (01, 02, …) so they sort in training order.
 - Each directory gets a metadata block in this README (model, checkpoint, date, RTF).
 - **Smoke / diagnostic runs** (`01_smoke_test`, etc.): committed; audio quality not evaluated.
-- **Production releases**: also committed here and mirrored on the HuggingFace model page.
+- **Full training milestones**: step-based (`stepNNNk`), not epoch-based. Stop criterion is perceptual quality, not epoch count.
 
 ## 01_smoke_test — metadata (2026-06-15)
 

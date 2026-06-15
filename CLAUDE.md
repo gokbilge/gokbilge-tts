@@ -97,13 +97,18 @@ Rules:
 
 ```
 samples/
-  01_smoke_test/        — 5-epoch smoke run (noise; pipeline check only)
-  02_v0_1_full_eval/    — first real v0.1 evaluation
+  01_smoke_test/              — 5-epoch smoke run (noise; pipeline check only)
+  02_v0_1_full_step050k/      — v0.1 full training, ~50k steps
+  03_v0_1_full_step100k/      — v0.1 full training, ~100k steps
+  04_v0_1_full_step200k/      — v0.1 full training, ~200k steps
+  05_v0_1_full_step300k/      — v0.1 full training, ~300k steps
   ...
 ```
 
 Rules:
 - Every evaluation produces 5 WAV files, one per fixed benchmark sentence.
 - New milestone = new `NN_` directory. Never overwrite a previous directory.
+- Milestones are **step-based** (`stepNNNk`), not epoch-based. Stop criterion is perceptual quality plateau.
 - Smoke / diagnostic samples are committed even though audio is noise.
 - Add a metadata block to `samples/README.md` for every new directory (model, checkpoint, date, RTF).
+- Generate with: `bash tools/eval_step.sh <sample_dir> [run_dir]` — exports ONNX from `last.ckpt` and synthesizes all 5 sentences.

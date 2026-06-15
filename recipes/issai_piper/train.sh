@@ -23,6 +23,10 @@ python3 -m piper_train.preprocess \
     --sample-rate 22050
 
 echo "[train] Starting VITS training..."
+# --max_epochs 10000 is a ceiling, not the actual target.
+# With 178k utterances and batch_size=16, each epoch takes ~3h; 10k epochs = ~3.4 years.
+# Real stop criterion: perceptual quality plateau around 300k–800k steps (~3–8 days).
+# Evaluate at step milestones with: bash tools/eval_step.sh <sample_dir>
 python3 -m piper_train \
     --dataset-dir "$TRAINING_DIR" \
     --accelerator gpu \

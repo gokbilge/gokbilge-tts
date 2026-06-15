@@ -135,13 +135,32 @@ bash recipes/issai_piper/train.sh \
 - `recipes/issai_piper/train.sh`: added `--default_root_dir "$CHECKPOINT_DIR"` so checkpoints go to `runs/v0_1_full_001/checkpoints/`, not inside `training/`
 - Server: `piper_train/__main__.py` re-deployed with updated patch (via `tools/piper_main_patch.py`)
 
-**First audit criteria (after epoch 99 checkpoint):**
-1. `find runs/v0_1_full_001/checkpoints -name "*.ckpt"` — checkpoint exists
-2. `tail -50 runs/v0_1_full_001/checkpoints/train.log` — losses not NaN, both gen/disc decreasing
-3. `python3 -c "import json; d=json.load(open('runs/v0_1_full_001/training/config.json')); print(len(d['phoneme_id_map']))"` — must print 159
-4. `nvidia-smi` — GPU not OOM at batch_size=16
-5. ONNX export from epoch-99 checkpoint + synthesis of all 5 benchmark sentences
+**Step-based evaluation plan (revised from epoch-based):**
 
-**Result:** (to be filled after first checkpoint)
+With 178k utterances and batch_size=16, each epoch takes ~3 hours (11,582 steps/epoch at ~1.09 steps/sec). 10,000 epochs = ~3.4 years. Actual stop criterion is perceptual quality plateau, expected around **300k–800k steps** (~3–8 days).
+
+`last.ckpt` is saved after every epoch — use `bash tools/eval_step.sh <sample_dir>` to export ONNX + generate 5 benchmark WAVs at any point.
+
+| Step | Sample dir | Assessment goal |
+|---|---|---|
+| ~50k | `02_v0_1_full_step050k` | Noise → speech-like structure? |
+| ~100k | `03_v0_1_full_step100k` | First speech-like output expected |
+| ~200k | `04_v0_1_full_step200k` | Turkish phonemes distinct? |
+| ~300k | `05_v0_1_full_step300k` | Continue / adjust / stop decision |
+| ~500k–800k | `06_v0_1_full_step500k+` | v0.1 quality decision |
+
+Quality thresholds:
+- 0–50k: noise is normal
+- 50k–100k: murmur / rhythm may emerge
+- 100k–200k: speech-like output expected
+- 200k–500k: intelligibility should arrive
+- 500k–800k: meaningful quality evaluation
+
+**Health check (first audit — GPU confirmed healthy 2026-06-15 ~03:48):**
+- GPU: NVIDIA GB10, 88% utilization, 5,458 MiB VRAM, 64°C / 41W ✓
+- step 849: loss_gen_all ~47–52, loss_disc_all ~1.7–2.4, no NaN ✓
+- `No last.ckpt found — starting from scratch` (patch worked correctly) ✓
+
+**Result:** (ongoing — fill in at each step milestone)
 
 ---
