@@ -161,6 +161,11 @@ Quality thresholds:
 - step 849: loss_gen_all ~47–52, loss_disc_all ~1.7–2.4, no NaN ✓
 - `No last.ckpt found — starting from scratch` (patch worked correctly) ✓
 
-**Result:** (ongoing — fill in at each step milestone)
+**Result:** Ongoing. Milestone exports recorded so far:
+
+- 160k steps (`samples/09_v0_1_full_step160k`): speech is mostly sentence-shaped and recognizably Turkish, but still noisy with clipped syllables and unstable articulation.
+- 200k steps (`samples/10_v0_1_full_step200k`): clear perceptual improvement over 160k. Rhythm and phoneme separation are better, with more intelligible words across the fixed 5-sentence set.
+
+**Current conclusion (2026-06-16):** The run is improving in the expected 100k–200k window. Keep training; do not treat lowest loss as the selection criterion. Preserve milestone samples for listening-based checkpoint selection.
 
 ---

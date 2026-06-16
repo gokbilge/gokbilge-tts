@@ -59,6 +59,8 @@ Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `las
 | 06_v0_1_full_step100k | 100k | noisy, partial words |
 | 07_v0_1_full_step120k | 120k | more stable rhythm, some intelligible phrases |
 | 08_v0_1_full_step140k | 140k | sentences increasingly intelligible, Turkish accent improving, still noisy/cut syllables |
+| 09_v0_1_full_step160k | 160k | clearer sentence structure, still noisy with unstable articulation |
+| 10_v0_1_full_step200k | 200k | better than 160k; more intelligible words and stronger phoneme separation |
 
 ---
 
@@ -74,3 +76,33 @@ Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `las
 
 Model: `runs/smoke/gokbilge_tr_smoke.onnx` — checkpoint `epoch=4-step=300`, 100 training utterances.
 Inference: `piper_train.infer_onnx`, OnnxRuntime CPU, NVIDIA GB10 server.
+
+---
+
+## 09_v0_1_full_step160k — metadata (2026-06-16)
+
+| File | Duration |
+|---|---|
+| s1_bugun_hava.wav | 1.44 s |
+| s2_turkiye_cumh.wav | 3.00 s |
+| s3_cocuklar.wav | 1.79 s |
+| s4_ogrenciler.wav | 2.67 s |
+| s5_sirket.wav | 1.86 s |
+
+Checkpoint label: `step160k` full-corpus evaluation export.
+Listening note: clearer sentence structure than 140k, but still noisy with clipped syllables.
+
+---
+
+## 10_v0_1_full_step200k — metadata (2026-06-16)
+
+| File | Duration |
+|---|---|
+| s1_bugun_hava.wav | 2.08 s |
+| s2_turkiye_cumh.wav | 2.87 s |
+| s3_cocuklar.wav | 2.72 s |
+| s4_ogrenciler.wav | 3.04 s |
+| s5_sirket.wav | 2.37 s |
+
+Checkpoint label: `step200k` full-corpus evaluation export.
+Listening note: perceptually better than 160k, with more intelligible words and cleaner phoneme separation across the benchmark set.

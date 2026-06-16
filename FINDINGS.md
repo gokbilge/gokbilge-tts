@@ -97,6 +97,20 @@ At 5 epochs with 100 utterances, the model outputs noise. This is expected and c
 
 ---
 
+## Full Training Perceptual Progress (v0_1_full_001)
+
+Listening-based evaluation on the fixed 5-sentence benchmark shows gradual but real intelligibility gains through 200k steps:
+
+- 100k: noisy, partial words
+- 120k: more stable rhythm, some intelligible phrases
+- 140k: sentences increasingly intelligible, Turkish accent improving, still noisy/cut syllables
+- 160k: sentence structure is clearer, but articulation remains unstable
+- 200k: better than 160k; phoneme separation and word-level intelligibility improve audibly
+
+This confirms the full-corpus VITS run is still on the improving side of the curve at 200k steps. Continue selecting checkpoints by listening, not by eval loss alone.
+
+---
+
 ## Samples Directory Convention
 
 `samples/` uses numbered subdirectories (`NN_<label>/`) so milestones sort chronologically and are never overwritten. Each directory holds the 5 fixed benchmark WAVs. Smoke/diagnostic samples are committed even when audio is noise — the point is confirming the pipeline produces audio of the right duration, not evaluating quality.
