@@ -46,6 +46,22 @@ Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `las
 - **Smoke / diagnostic runs** (`01_smoke_test`, etc.): committed; audio quality not evaluated.
 - **Full training milestones**: step-based (`stepNNNk`), not epoch-based. Stop criterion is perceptual quality, not epoch count.
 
+## Quality notes by milestone
+
+| Directory | Steps | Quality |
+|---|---|---|
+| 01_smoke_test | ~300 | pure noise — pipeline check only |
+| 02_v0_1_full_step010k | 10k | noise |
+| 03_v0_1_full_step020k | 20k | noise |
+| 03b_v0_1_full_step032k | 32k | dirty but some words and sentences audible |
+| 04_v0_1_full_step050k | 50k | — |
+| 05_v0_1_full_step080k | 80k | — |
+| 06_v0_1_full_step100k | 100k | noisy, partial words |
+| 07_v0_1_full_step120k | 120k | more stable rhythm, some intelligible phrases |
+| 08_v0_1_full_step140k | 140k | sentences increasingly intelligible, Turkish accent improving, still noisy/cut syllables |
+
+---
+
 ## 01_smoke_test — metadata (2026-06-15)
 
 | File | Text | Duration | RTF |
