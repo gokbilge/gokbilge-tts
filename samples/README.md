@@ -60,7 +60,7 @@ Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `las
 | 07_v0_1_full_step120k | 120k | more stable rhythm, some intelligible phrases |
 | 08_v0_1_full_step140k | 140k | sentences increasingly intelligible, Turkish accent improving, still noisy/cut syllables |
 | 09_v0_1_full_step160k | 160k | clearer sentence structure, still noisy with unstable articulation |
-| 10_v0_1_full_step200k | 200k | better than 160k; more intelligible words and stronger phoneme separation |
+| 10_v0_1_full_step200k | 200k | sentences are now structurally recognizable; speech rhythm and Turkish-like accent continue to improve; intermittent noise, stuttering, skipped syllables, and swallowed words remain; some readings are fast or energetic, suggesting prosody is emerging but not yet stable |
 
 ---
 
@@ -105,4 +105,4 @@ Listening note: clearer sentence structure than 140k, but still noisy with clipp
 | s5_sirket.wav | 2.37 s |
 
 Checkpoint label: `step200k` full-corpus evaluation export.
-Listening note: perceptually better than 160k, with more intelligible words and cleaner phoneme separation across the benchmark set.
+Listening note: sentences are now structurally recognizable; speech rhythm and Turkish-like accent continue to improve; intermittent noise, stuttering, skipped syllables, and swallowed words remain; some readings are fast or energetic, suggesting prosody is emerging but not yet stable.
