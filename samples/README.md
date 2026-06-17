@@ -62,6 +62,7 @@ Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `las
 | 09_v0_1_full_step160k | 160k | clearer sentence structure, still noisy with unstable articulation |
 | 10_v0_1_full_step200k | 200k | sentences are now structurally recognizable; speech rhythm and Turkish-like accent continue to improve; intermittent noise, stuttering, skipped syllables, and swallowed words remain; some readings are fast or energetic, suggesting prosody is emerging but not yet stable |
 | 11_v0_1_full_step250k | 250k | most sentences are more stable and intelligible; short sentence s1 is partially swallowed; residual noise, skipped syllables, fast tempo, and accent remain; prosody is improving but still unstable |
+| 12_v0_1_full_step300k | 300k | strong v0.1 candidate signal; s1 no longer fully swallowed but remains segmented with audible gaps; long sentences are more coherent; s2 has some initial noise and energetic tempo; s3 still stutters on Turkish-heavy words; s4 and especially s5 show strong improvement; residual noise, accent, skipped syllables, and unstable prosody remain |
 
 ---
 
@@ -123,3 +124,21 @@ Listening note: most benchmark sentences are more stable and intelligible than 2
 | s3_cocuklar.wav | improved structure; still has skipped syllables / articulation instability |
 | s4_ogrenciler.wav | comparatively stable; sentence flow is clearer |
 | s5_sirket.wav | short and fast; accented but more intelligible |
+
+---
+
+## 12_v0_1_full_step300k — metadata
+
+Checkpoint label: `step300k` full-corpus evaluation export.
+
+Listening note: strong v0.1 candidate signal. The short sentence `s1_bugun_hava.wav` is no longer fully swallowed, but remains segmented with audible gaps between syllables/words. `s2_turkiye_cumh.wav` is more coherent as a long sentence, with some initial noise and energetic tempo. `s3_cocuklar.wav` still stutters on Turkish-heavy words, especially around “çocuklar,” but continues to improve. `s4_ogrenciler.wav` is comparatively stable, and `s5_sirket.wav` is one of the strongest samples so far. Residual noise, accent, skipped syllables, and unstable prosody remain.
+
+Candidate status: `step300k` is a v0.1 candidate checkpoint. Training should continue to 500k before final release-candidate selection. Compare 300k vs 500k using the same 5 benchmark sentences.
+
+| File | Notes |
+|---|---|
+| s1_bugun_hava.wav | no longer fully swallowed; still segmented with audible gaps |
+| s2_turkiye_cumh.wav | coherent long-sentence structure; some initial noise and energetic tempo |
+| s3_cocuklar.wav | still stutters on Turkish-heavy words; fast but improving |
+| s4_ogrenciler.wav | comparatively stable; sentence flow continues to improve |
+| s5_sirket.wav | strongest or near-strongest sample; substantially more intelligible |
