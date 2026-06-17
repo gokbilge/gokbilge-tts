@@ -61,6 +61,7 @@ Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `las
 | 08_v0_1_full_step140k | 140k | sentences increasingly intelligible, Turkish accent improving, still noisy/cut syllables |
 | 09_v0_1_full_step160k | 160k | clearer sentence structure, still noisy with unstable articulation |
 | 10_v0_1_full_step200k | 200k | sentences are now structurally recognizable; speech rhythm and Turkish-like accent continue to improve; intermittent noise, stuttering, skipped syllables, and swallowed words remain; some readings are fast or energetic, suggesting prosody is emerging but not yet stable |
+| 11_v0_1_full_step250k | 250k | most sentences are more stable and intelligible; short sentence s1 is partially swallowed; residual noise, skipped syllables, fast tempo, and accent remain; prosody is improving but still unstable |
 
 ---
 
@@ -106,3 +107,19 @@ Listening note: clearer sentence structure than 140k, but still noisy with clipp
 
 Checkpoint label: `step200k` full-corpus evaluation export.
 Listening note: sentences are now structurally recognizable; speech rhythm and Turkish-like accent continue to improve; intermittent noise, stuttering, skipped syllables, and swallowed words remain; some readings are fast or energetic, suggesting prosody is emerging but not yet stable.
+
+---
+
+## 11_v0_1_full_step250k — metadata
+
+Checkpoint label: `step250k` full-corpus evaluation export.
+
+Listening note: most benchmark sentences are more stable and intelligible than 200k. The short sentence `s1_bugun_hava.wav` remains partially swallowed / unstable. The remaining samples show improved structure, clearer sentence flow, and stronger Turkish-like rhythm, but residual noise, skipped syllables, fast tempo, accent, and unstable prosody remain.
+
+| File | Notes |
+|---|---|
+| s1_bugun_hava.wav | short sentence remains unstable; partially swallowed / cut |
+| s2_turkiye_cumh.wav | more coherent and stable than earlier milestones; long sentence structure is clearer |
+| s3_cocuklar.wav | improved structure; still has skipped syllables / articulation instability |
+| s4_ogrenciler.wav | comparatively stable; sentence flow is clearer |
+| s5_sirket.wav | short and fast; accented but more intelligible |
