@@ -99,15 +99,29 @@ At 5 epochs with 100 utterances, the model outputs noise. This is expected and c
 
 ## Full Training Perceptual Progress (v0_1_full_001)
 
-Listening-based evaluation on the fixed 5-sentence benchmark shows gradual but real intelligibility gains through 200k steps:
+Listening-based evaluation on the fixed 5-sentence benchmark shows gradual but real intelligibility gains through 400k steps, but the quality curve is not monotonic:
 
 - 100k: noisy, partial words
 - 120k: more stable rhythm, some intelligible phrases
 - 140k: sentences increasingly intelligible, Turkish accent improving, still noisy/cut syllables
 - 160k: sentence structure is clearer, but articulation remains unstable
 - 200k: better than 160k; phoneme separation and word-level intelligibility improve audibly
+- 300k: strong candidate checkpoint; long sentences and `s5_sirket.wav` improve materially, while `s3_cocuklar.wav` still struggles on Turkish-heavy words
+- 400k: mixed trend-check; `s1_bugun_hava.wav` improves significantly, but `s3_cocuklar.wav` regresses or remains unstable and the overall set is not clearly better than 300k
 
-This confirms the full-corpus VITS run is still on the improving side of the curve at 200k steps. Continue selecting checkpoints by listening, not by eval loss alone.
+This confirms the full-corpus VITS run can improve one sentence while regressing another at later milestones. Continue selecting checkpoints by listening, not by eval loss alone, and preserve intermediate checkpoints instead of assuming later is automatically better.
+
+### 300k is the safer v0.1 checkpoint than 400k (verified 2026-06-18)
+
+On the fixed 5-sentence benchmark, `step400k` is a mixed trend-check rather than a clean upgrade:
+
+- `s1_bugun_hava.wav` improves significantly with fewer audible gaps
+- `s2_turkiye_cumh.wav` stays coherent but still has energetic tempo and some initial noise
+- `s3_cocuklar.wav` is the weakest 400k sample, with stuttering/gaps on Turkish-heavy words
+- `s4_ogrenciler.wav` remains stable
+- `s5_sirket.wav` remains strong, but not clearly stronger than 300k
+
+Practical rule: preserve `step300k` as the safer v0.1 candidate while training continues to 500k for the next comparison.
 
 ---
 

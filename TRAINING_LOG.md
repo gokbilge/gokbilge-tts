@@ -165,7 +165,9 @@ Quality thresholds:
 
 - 160k steps (`samples/09_v0_1_full_step160k`): speech is mostly sentence-shaped and recognizably Turkish, but still noisy with clipped syllables and unstable articulation.
 - 200k steps (`samples/10_v0_1_full_step200k`): clear perceptual improvement over 160k. Rhythm and phoneme separation are better, with more intelligible words across the fixed 5-sentence set.
+- 300k steps (`samples/12_v0_1_full_step300k`): strong v0.1 candidate signal. `s1_bugun_hava.wav` is no longer fully swallowed, long sentences are more coherent, and `s5_sirket.wav` is one of the strongest samples so far, but noise, accent, skipped syllables, and unstable prosody remain.
+- 400k steps (`samples/13_v0_1_full_step400k`): mixed trend-check result. `s1_bugun_hava.wav` improves significantly versus 300k with fewer audible gaps, but `s3_cocuklar.wav` regresses or remains unstable on Turkish-heavy words; `s5_sirket.wav` stays strong without a clear overall gain over 300k.
 
-**Current conclusion (2026-06-16):** The run is improving in the expected 100k–200k window. Keep training; do not treat lowest loss as the selection criterion. Preserve milestone samples for listening-based checkpoint selection.
+**Current conclusion (2026-06-18):** `step300k` remains the safer v0.1 candidate checkpoint at this point. `step400k` shows that training is still moving, but not monotonically improving across the fixed 5-sentence set. Keep training to 500k, preserve both checkpoints, and continue selecting by perceptual listening rather than loss alone.
 
 ---
