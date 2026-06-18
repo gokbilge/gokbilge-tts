@@ -63,6 +63,7 @@ Generate with: `bash tools/eval_step.sh <sample_dir>` — exports ONNX from `las
 | 10_v0_1_full_step200k | 200k | sentences are now structurally recognizable; speech rhythm and Turkish-like accent continue to improve; intermittent noise, stuttering, skipped syllables, and swallowed words remain; some readings are fast or energetic, suggesting prosody is emerging but not yet stable |
 | 11_v0_1_full_step250k | 250k | most sentences are more stable and intelligible; short sentence s1 is partially swallowed; residual noise, skipped syllables, fast tempo, and accent remain; prosody is improving but still unstable |
 | 12_v0_1_full_step300k | 300k | strong v0.1 candidate signal; s1 no longer fully swallowed but remains segmented with audible gaps; long sentences are more coherent; s2 has some initial noise and energetic tempo; s3 still stutters on Turkish-heavy words; s4 and especially s5 show strong improvement; residual noise, accent, skipped syllables, and unstable prosody remain |
+| 13_v0_1_full_step400k | 400k | mixed trend-check result; s1 improves significantly with fewer audible gaps; s2 remains coherent but energetic with some initial noise; s3 regresses or remains unstable on Turkish-heavy words with stuttering and gaps; s4 is stable; s5 remains strong but is not clearly better than 300k; 300k remains the safer v0.1 candidate pending 500k comparison |
 
 ---
 
@@ -142,3 +143,19 @@ Candidate status: `step300k` is a v0.1 candidate checkpoint. Training should con
 | s3_cocuklar.wav | still stutters on Turkish-heavy words; fast but improving |
 | s4_ogrenciler.wav | comparatively stable; sentence flow continues to improve |
 | s5_sirket.wav | strongest or near-strongest sample; substantially more intelligible |
+
+---
+
+## 13_v0_1_full_step400k — metadata
+
+Checkpoint label: `step400k` full-corpus trend-check export.
+
+Listening note: mixed trend-check result. `s1_bugun_hava.wav` improves significantly compared with 300k, with fewer audible gaps and less segmentation. `s2_turkiye_cumh.wav` remains coherent as a long sentence but still has energetic tempo and some initial noise. `s3_cocuklar.wav` is the weakest sample at this milestone, with stuttering/gaps around Turkish-heavy words. `s4_ogrenciler.wav` remains comparatively stable. `s5_sirket.wav` remains strong, but 400k is not clearly better than the preserved 300k candidate overall.
+
+| File | Notes |
+|---|---|
+| s1_bugun_hava.wav | significantly improved; fewer audible gaps than 300k |
+| s2_turkiye_cumh.wav | coherent long-sentence structure; energetic tempo and some initial noise remain |
+| s3_cocuklar.wav | weakest 400k sample; stutters/skips on Turkish-heavy words |
+| s4_ogrenciler.wav | stable and improving |
+| s5_sirket.wav | still strong, but not clearly better than 300k |
