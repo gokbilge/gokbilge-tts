@@ -29,3 +29,12 @@ venv/
 eval_output/
 eval_*/
 /tmp/
+
+# v0.2 dataset cleaning generated outputs
+reports/dataset_audit.csv
+reports/dataset_quality_summary.md
+reports/rejected_samples.csv
+reports/suspicious_samples.csv
+data/manifests/train_clean_*.jsonl
+data/manifests/train_rejected.jsonl
+data/manifests/train_suspicious.jsonl

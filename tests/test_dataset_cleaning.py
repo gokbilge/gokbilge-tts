@@ -50,6 +50,28 @@ def _read_jsonl(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
 
+def test_audit_resolves_relative_audio_paths_from_manifest_dir(tmp_path):
+    manifest_dir = tmp_path / "nested" / "manifests"
+    audio_dir = tmp_path / "nested" / "audio"
+    manifest_dir.mkdir(parents=True)
+    audio_dir.mkdir(parents=True)
+
+    wav_path = audio_dir / "relative.wav"
+    _write_wav(wav_path, _tone_with_silence(duration_sec=2.0))
+
+    manifest = manifest_dir / "train.jsonl"
+    _write_manifest(
+        manifest,
+        [{"audio_filepath": "../audio/relative.wav", "text": "Relative path sample."}],
+    )
+
+    rows = audit_manifest(manifest)
+
+    assert len(rows) == 1
+    assert "audio_unreadable" not in rows[0].reasons
+    assert rows[0].status != "reject"
+
+
 def test_audit_computes_duration_and_metadata(tmp_path):
     wav_path = tmp_path / "keep.wav"
     _write_wav(wav_path, _tone_with_silence(duration_sec=2.0))

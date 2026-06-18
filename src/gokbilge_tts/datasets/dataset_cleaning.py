@@ -315,9 +315,15 @@ def audit_manifest(
     """Audit a manifest and return computed rows."""
     thresholds = thresholds or AuditThresholds()
     rows: list[AuditRow] = []
+    manifest_dir = manifest_path.parent
 
     for line_no, entry in iter_manifest_records(manifest_path):
-        audio_path = Path(str(entry.get("audio_filepath", "")))
+        raw_audio_path = Path(str(entry.get("audio_filepath", "")))
+        audio_path = (
+            raw_audio_path
+            if raw_audio_path.is_absolute()
+            else manifest_dir / raw_audio_path
+        )
         text = str(entry.get("text", "")).strip()
         text_length = len(text)
         word_count = len(text.split()) if text else 0
