@@ -4,6 +4,8 @@
 
 - First pilot manifest: `data/manifests/train_clean_balanced.jsonl`
 - Source manifest: `runs/v0_1_full_001/manifests/train.jsonl`
+- Training script: `recipes/issai_piper/train_v0_2_balanced.sh`
+- Run directory: `runs/v0_2_balanced_001`
 - Proposed run name: `v0_2_balanced_001`
 
 ## Audit result
@@ -20,6 +22,27 @@ Use the balanced manifest for the first v0.2 pilot.
 
 Reason: the balanced manifest removes clearly bad rows while preserving most of the training data. The strict manifest should be kept for a second comparison run only, after the balanced pilot has been evaluated.
 
+## Launch plan
+
+The pilot must stay separate from v0.1. Do not write into `runs/v0_1_full_001`.
+
+Preparation script:
+
+```bash
+bash recipes/issai_piper/train_v0_2_balanced.sh
+```
+
+That script prepares the v0.2-specific manifest export under `runs/v0_2_balanced_001` and prints the final training command. Do not start training until the script is reviewed.
+
+When approved, the actual training command remains the same v0.1 Piper/VITS recipe with unchanged comparison hyperparameters:
+
+```bash
+bash recipes/issai_piper/train.sh \
+  runs/v0_2_balanced_001/piper \
+  runs/v0_2_balanced_001/training \
+  runs/v0_2_balanced_001/checkpoints
+```
+
 ## Evaluation plan
 
 Milestone evaluations to preserve and compare:
@@ -28,6 +51,15 @@ Milestone evaluations to preserve and compare:
 - `100k`
 - `150k`
 - `200k`
+
+`tools/eval_step.sh` already supports arbitrary run directories, so the v0.2 eval command should be:
+
+```bash
+bash tools/eval_step.sh v0_2_balanced_001_step050k runs/v0_2_balanced_001
+bash tools/eval_step.sh v0_2_balanced_001_step100k runs/v0_2_balanced_001
+bash tools/eval_step.sh v0_2_balanced_001_step150k runs/v0_2_balanced_001
+bash tools/eval_step.sh v0_2_balanced_001_step200k runs/v0_2_balanced_001
+```
 
 Do not compare against the smoke run. Compare directly against:
 
@@ -39,7 +71,7 @@ Do not compare against the smoke run. Compare directly against:
 Watch especially:
 
 - `s3_cocuklar.wav`
-- Turkish-heavy words: `?ocuklar`, `?i?ek`, `?eker`, `?z?m`, `?l??m`, `??renciler`, `b?y?me`
+- Turkish-heavy words: `cocuklar`, `cicek`, `seker`, `uzum`, `olcum`, `ogrenciler`, `buyume`
 
 Primary question: does the balanced-clean manifest reduce stuttering, gaps, or unstable articulation on Turkish-heavy words without regressing the stronger benchmark samples.
 
@@ -48,4 +80,5 @@ Primary question: does the balanced-clean manifest reduce stuttering, gaps, or u
 - Do not overwrite any v0.1 run directories.
 - Do not delete or modify v0.1 candidate checkpoints.
 - Keep generated clean manifests local-only unless release policy changes.
-- Do not start v0.2 training until the run command and evaluation checkpoints are explicitly approved.
+- Do not start training until the launch script is reviewed.
+- Keep the strict manifest for a second comparison run only.
