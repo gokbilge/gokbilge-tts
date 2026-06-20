@@ -100,7 +100,7 @@ Reduce stutter/gap behavior on Turkish-heavy words and phoneme patterns.
 
 ## Relaxed pilot review package
 
-- Relaxed strategy is the selected candidate for pilot review.
+- Relaxed strategy was the selected candidate for pilot review and is now closed as negative early pilot.
 - Spot-check local report path: `reports/v0_3_turkish_heavy/spotcheck/SPOTCHECK_README.md`
 - Excluded top100: `reports/v0_3_turkish_heavy/spotcheck/excluded_relaxed/excluded_relaxed_top100.csv`
 - Retained near-threshold top100: `reports/v0_3_turkish_heavy/spotcheck/retained_near_threshold/retained_near_threshold_top100.csv`
@@ -108,4 +108,24 @@ Reduce stutter/gap behavior on Turkish-heavy words and phoneme patterns.
 - Training script: `recipes/issai_piper/train_v0_3_turkish_heavy_relaxed.sh`
 - Run directory: `runs/v0_3_turkish_heavy_relaxed_001`
 - Manifest: `data/manifests/train_v0_3_turkish_heavy_relaxed.jsonl`
-- Warning: do not start training until the spot-check package is reviewed.
+- Warning: do not restart v0.3 relaxed training; the pilot is closed as negative early pilot.
+
+
+## v0.3 Relaxed Pilot Closure
+
+Decision: CLOSED_NEGATIVE_EARLY_PILOT
+
+The v0.3 relaxed manifest improved dataset-level target-row gap/silence metrics and preserved protected term retention better than the aggressive exclusion mode. However, the controlled pilot did not improve synthesis quality.
+
+Human listening at the first early evaluation point found that the v0.3 relaxed samples were fragmented, cut up, and in some cases not intelligible. The v0.1 step500k candidate remained far better.
+
+Conclusion:
+- Do not continue v0.3 relaxed to 100k.
+- Do not use v0.3 relaxed as a release candidate.
+- Keep v0.1 step500k as the primary v0.1 release candidate.
+- Dataset filtering alone is not sufficient to solve the observed Turkish-heavy synthesis weakness.
+
+Recommended next directions:
+1. Package and document v0.1 step500k as the current primary release candidate.
+2. Investigate fine-tuning from v0.1 step500k instead of training from scratch.
+3. Run a separate phoneme/G2P/text-normalization diagnostic track for Turkish-heavy words.
