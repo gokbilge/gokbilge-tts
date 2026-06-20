@@ -97,3 +97,15 @@ Reduce stutter/gap behavior on Turkish-heavy words and phoneme patterns.
   - `data/manifests/train_v0_3_turkish_heavy_hard.jsonl`
 - Manifest selection must be based on protected retention together with gap-metric improvement.
 - Do not train until the selected manifest is reviewed.
+
+## Relaxed pilot review package
+
+- Relaxed strategy is the selected candidate for pilot review.
+- Spot-check local report path: `reports/v0_3_turkish_heavy/spotcheck/SPOTCHECK_README.md`
+- Excluded top100: `reports/v0_3_turkish_heavy/spotcheck/excluded_relaxed/excluded_relaxed_top100.csv`
+- Retained near-threshold top100: `reports/v0_3_turkish_heavy/spotcheck/retained_near_threshold/retained_near_threshold_top100.csv`
+- Random reference: `reports/v0_3_turkish_heavy/spotcheck/random_reference/random_reference_50.csv`
+- Training script: `recipes/issai_piper/train_v0_3_turkish_heavy_relaxed.sh`
+- Run directory: `runs/v0_3_turkish_heavy_relaxed_001`
+- Manifest: `data/manifests/train_v0_3_turkish_heavy_relaxed.jsonl`
+- Warning: do not start training until the spot-check package is reviewed.
