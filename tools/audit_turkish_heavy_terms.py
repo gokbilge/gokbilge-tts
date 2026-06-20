@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 import argparse
 import csv
 import json
@@ -13,7 +13,7 @@ except ImportError:  # pragma: no cover
 
 TEXT_KEYS = ("text", "sentence", "normalized_text")
 AUDIO_KEYS = ("audio_filepath", "audio", "path", "wav")
-TARGET_CHARS = ("ç", "ş", "ğ", "ü", "ö", "ı")
+TARGET_CHARS = ("\u00e7", "\u015f", "\u011f", "\u00fc", "\u00f6", "\u0131")
 CSV_FIELDS = (
     "line_no",
     "text",
@@ -26,7 +26,30 @@ CSV_FIELDS = (
     "peak",
     "sample_rate",
     "channels",
+    "leading_silence_sec",
+    "trailing_silence_sec",
+    "internal_silence_ratio",
+    "longest_internal_gap_sec",
+    "internal_gap_count",
+    "low_energy_ratio",
 )
+WINDOW_MS = 20
+SILENCE_THRESHOLD_SCALE = 0.03
+ABSOLUTE_RMS_FLOOR = 16
+MIN_INTERNAL_GAP_SEC = 0.08
+
+
+def normalize_cli_text(raw_text: str) -> str:
+    if not any("\udc80" <= char <= "\udcff" for char in raw_text):
+        return raw_text
+
+    raw_bytes = raw_text.encode("utf-8", "surrogateescape")
+    for encoding in ("utf-8", "cp1254", "latin-1"):
+        try:
+            return raw_bytes.decode(encoding)
+        except UnicodeDecodeError:
+            continue
+    return raw_text
 
 
 def parse_args() -> argparse.Namespace:
@@ -45,7 +68,8 @@ def parse_args() -> argparse.Namespace:
 
 
 def parse_terms(raw_terms: str) -> list[str]:
-    terms = [term.strip() for term in raw_terms.split(",") if term.strip()]
+    normalized_terms = normalize_cli_text(raw_terms)
+    terms = [term.strip() for term in normalized_terms.split(",") if term.strip()]
     if not terms:
         raise ValueError("At least one non-empty term is required")
     return terms
@@ -84,6 +108,168 @@ def round_or_blank(value: float | int | None) -> str | float | int:
     return value
 
 
+def convert_frames_to_mono(frames: bytes, sample_width: int, channels: int) -> bytes:
+    if channels <= 1:
+        return frames
+
+    sample_count = len(frames) // sample_width
+    if sample_count == 0:
+        return b""
+
+    mono_samples = bytearray()
+    frame_width = sample_width * channels
+    max_value = (1 << (sample_width * 8 - 1)) - 1
+    min_value = -(1 << (sample_width * 8 - 1))
+
+    for offset in range(0, len(frames), frame_width):
+        channel_values = []
+        for channel in range(channels):
+            start = offset + channel * sample_width
+            end = start + sample_width
+            if end > len(frames):
+                break
+            value = int.from_bytes(frames[start:end], byteorder="little", signed=True)
+            channel_values.append(value)
+        if not channel_values:
+            continue
+        mono_value = int(sum(channel_values) / len(channel_values))
+        mono_value = max(min_value, min(max_value, mono_value))
+        mono_samples.extend(mono_value.to_bytes(sample_width, byteorder="little", signed=True))
+    return bytes(mono_samples)
+
+
+def rms_for_chunk(chunk: bytes, sample_width: int) -> float:
+    if not chunk:
+        return 0.0
+    if audioop is not None:
+        return float(audioop.rms(chunk, sample_width))
+
+    sample_count = len(chunk) // sample_width
+    if sample_count == 0:
+        return 0.0
+
+    total = 0.0
+    for offset in range(0, sample_count * sample_width, sample_width):
+        value = int.from_bytes(
+            chunk[offset : offset + sample_width],
+            byteorder="little",
+            signed=True,
+        )
+        total += float(value * value)
+    return math.sqrt(total / sample_count)
+
+
+def compute_window_rms_values(
+    frames: bytes,
+    sample_width: int,
+    channels: int,
+    sample_rate: int,
+    window_ms: int = WINDOW_MS,
+) -> tuple[list[float], float]:
+    if not frames or sample_width <= 0 or sample_rate <= 0 or channels <= 0:
+        return [], window_ms / 1000.0
+
+    mono_frames = convert_frames_to_mono(frames, sample_width, channels)
+    samples_per_window = max(1, int(sample_rate * window_ms / 1000.0))
+    bytes_per_window = samples_per_window * sample_width
+    window_sec = samples_per_window / sample_rate
+
+    window_rms_values: list[float] = []
+    for offset in range(0, len(mono_frames), bytes_per_window):
+        chunk = mono_frames[offset : offset + bytes_per_window]
+        if not chunk:
+            continue
+        window_rms_values.append(rms_for_chunk(chunk, sample_width))
+    return window_rms_values, window_sec
+
+
+def find_leading_silent_windows(silent_flags: list[bool]) -> int:
+    count = 0
+    for flag in silent_flags:
+        if not flag:
+            break
+        count += 1
+    return count
+
+
+def find_trailing_silent_windows(silent_flags: list[bool]) -> int:
+    count = 0
+    for flag in reversed(silent_flags):
+        if not flag:
+            break
+        count += 1
+    return count
+
+
+def compute_silence_metrics(
+    frames: bytes,
+    sample_width: int,
+    channels: int,
+    sample_rate: int,
+) -> dict[str, float | int | None]:
+    metrics = {
+        "leading_silence_sec": None,
+        "trailing_silence_sec": None,
+        "internal_silence_ratio": None,
+        "longest_internal_gap_sec": None,
+        "internal_gap_count": None,
+        "low_energy_ratio": None,
+    }
+    window_rms_values, window_sec = compute_window_rms_values(
+        frames,
+        sample_width,
+        channels,
+        sample_rate,
+    )
+    if not window_rms_values:
+        return metrics
+
+    max_window_rms = max(window_rms_values)
+    silence_threshold = max(ABSOLUTE_RMS_FLOOR, SILENCE_THRESHOLD_SCALE * max_window_rms)
+    silent_flags = [value <= silence_threshold for value in window_rms_values]
+    total_windows = len(silent_flags)
+    silent_windows = sum(1 for flag in silent_flags if flag)
+
+    leading = find_leading_silent_windows(silent_flags)
+    trailing = find_trailing_silent_windows(silent_flags)
+
+    core_start = leading
+    core_end = total_windows - trailing
+    if core_end < core_start:
+        core_end = core_start
+    core_flags = silent_flags[core_start:core_end]
+    internal_silent_windows = sum(1 for flag in core_flags if flag)
+
+    min_gap_windows = max(1, int(math.ceil(MIN_INTERNAL_GAP_SEC / window_sec)))
+    longest_gap_windows = 0
+    gap_count = 0
+    run_length = 0
+    for flag in core_flags:
+        if flag:
+            run_length += 1
+            continue
+        if run_length:
+            longest_gap_windows = max(longest_gap_windows, run_length)
+            if run_length >= min_gap_windows:
+                gap_count += 1
+            run_length = 0
+    if run_length:
+        longest_gap_windows = max(longest_gap_windows, run_length)
+        if run_length >= min_gap_windows:
+            gap_count += 1
+
+    core_window_count = len(core_flags)
+    metrics["leading_silence_sec"] = leading * window_sec
+    metrics["trailing_silence_sec"] = trailing * window_sec
+    metrics["internal_silence_ratio"] = (
+        internal_silent_windows / core_window_count if core_window_count else 0.0
+    )
+    metrics["longest_internal_gap_sec"] = longest_gap_windows * window_sec
+    metrics["internal_gap_count"] = gap_count
+    metrics["low_energy_ratio"] = silent_windows / total_windows if total_windows else 0.0
+    return metrics
+
+
 def audio_stats(audio_path: Path) -> dict[str, float | int | None]:
     stats = {
         "duration": None,
@@ -92,6 +278,12 @@ def audio_stats(audio_path: Path) -> dict[str, float | int | None]:
         "peak": None,
         "sample_rate": None,
         "channels": None,
+        "leading_silence_sec": None,
+        "trailing_silence_sec": None,
+        "internal_silence_ratio": None,
+        "longest_internal_gap_sec": None,
+        "internal_gap_count": None,
+        "low_energy_ratio": None,
     }
     try:
         with wave.open(str(audio_path), "rb") as wav_file:
@@ -104,9 +296,12 @@ def audio_stats(audio_path: Path) -> dict[str, float | int | None]:
             stats["duration"] = duration
             stats["sample_rate"] = sample_rate
             stats["channels"] = channels
-            if frames and audioop is not None:
-                stats["rms"] = audioop.rms(frames, sample_width)
-                stats["peak"] = audioop.max(frames, sample_width)
+            if frames:
+                if audioop is not None:
+                    stats["rms"] = audioop.rms(frames, sample_width)
+                    stats["peak"] = audioop.max(frames, sample_width)
+                silence_metrics = compute_silence_metrics(frames, sample_width, channels, sample_rate)
+                stats.update(silence_metrics)
     except Exception:
         return stats
     return stats
@@ -176,6 +371,12 @@ def audit_manifest(manifest_path: Path, terms: list[str]) -> tuple[dict, list[di
                 "peak": None,
                 "sample_rate": None,
                 "channels": None,
+                "leading_silence_sec": None,
+                "trailing_silence_sec": None,
+                "internal_silence_ratio": None,
+                "longest_internal_gap_sec": None,
+                "internal_gap_count": None,
+                "low_energy_ratio": None,
             }
 
             if stats["duration"] and stats["duration"] > 0:
@@ -193,6 +394,12 @@ def audit_manifest(manifest_path: Path, terms: list[str]) -> tuple[dict, list[di
                 "peak": round_or_blank(stats["peak"]),
                 "sample_rate": round_or_blank(stats["sample_rate"]),
                 "channels": round_or_blank(stats["channels"]),
+                "leading_silence_sec": round_or_blank(stats["leading_silence_sec"]),
+                "trailing_silence_sec": round_or_blank(stats["trailing_silence_sec"]),
+                "internal_silence_ratio": round_or_blank(stats["internal_silence_ratio"]),
+                "longest_internal_gap_sec": round_or_blank(stats["longest_internal_gap_sec"]),
+                "internal_gap_count": round_or_blank(stats["internal_gap_count"]),
+                "low_energy_ratio": round_or_blank(stats["low_energy_ratio"]),
             }
             extracted_rows.append(row)
 
@@ -217,10 +424,19 @@ def write_jsonl(output_path: Path, rows: list[dict]) -> None:
 
 def write_summary(output_path: Path, summary: dict, rows: list[dict]) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    duration_stats = compute_numeric_stats(rows, "duration")
-    cps_stats = compute_numeric_stats(rows, "chars_per_sec")
-    rms_stats = compute_numeric_stats(rows, "rms")
-    peak_stats = compute_numeric_stats(rows, "peak")
+    stat_labels = [
+        "duration",
+        "chars_per_sec",
+        "rms",
+        "peak",
+        "leading_silence_sec",
+        "trailing_silence_sec",
+        "internal_silence_ratio",
+        "longest_internal_gap_sec",
+        "internal_gap_count",
+        "low_energy_ratio",
+    ]
+    stats_by_label = {label: compute_numeric_stats(rows, label) for label in stat_labels}
 
     with output_path.open("w", encoding="utf-8") as handle:
         handle.write("# Turkish-heavy target audit\n\n")
@@ -239,10 +455,8 @@ def write_summary(output_path: Path, summary: dict, rows: list[dict]) -> None:
             handle.write(f"- {char}: {count}\n")
 
         handle.write("\n## Extracted-row stats\n\n")
-        write_stats_block(handle, "duration", duration_stats)
-        write_stats_block(handle, "chars_per_sec", cps_stats)
-        write_stats_block(handle, "rms", rms_stats)
-        write_stats_block(handle, "peak", peak_stats)
+        for label in stat_labels:
+            write_stats_block(handle, label, stats_by_label[label])
 
 
 def write_stats_block(handle, label: str, stats: dict[str, float] | None) -> None:

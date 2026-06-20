@@ -58,3 +58,21 @@ Reduce stutter/gap behavior on Turkish-heavy words and phoneme patterns.
 - do not continue v0.2 balanced blindly
 - do not overwrite v0.1 candidates
 - do not release v0.3 until it beats v0.1 `step500k` on Turkish-heavy samples
+## Gap-aware audit update
+
+- The v0.3 audit tool now emits gap and silence metrics:
+  - `leading_silence_sec`
+  - `trailing_silence_sec`
+  - `internal_silence_ratio`
+  - `longest_internal_gap_sec`
+  - `internal_gap_count`
+  - `low_energy_ratio`
+- Do not choose the next manifest strategy before reviewing:
+  - `reports/v0_3_turkish_heavy/balanced_target_quality_buckets_summary.md`
+- Generated reports under `reports/v0_3_turkish_heavy/` remain local-only.
+- The next decision should be based on which failure modes dominate bad target rows:
+  - longest internal gap
+  - internal silence
+  - low RMS
+  - speed / chars-per-sec
+  - clipping
