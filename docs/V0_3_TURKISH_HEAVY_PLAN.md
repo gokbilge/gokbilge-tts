@@ -76,3 +76,14 @@ Reduce stutter/gap behavior on Turkish-heavy words and phoneme patterns.
   - low RMS
   - speed / chars-per-sec
   - clipping
+
+## Manifest strategy selected
+
+- Selected strategy: `balanced + target bad-row exclusion`
+- Generated local manifest path: `data/manifests/train_v0_3_turkish_heavy_clean.jsonl`
+- Generated local summary path: `reports/v0_3_turkish_heavy/train_v0_3_turkish_heavy_clean_summary.md`
+- The generated manifest and reports are local-only and must not be committed.
+- Do not start training until all of the following are reviewed:
+  1. protected term retention
+  2. worst excluded rows spot-check
+  3. v0.1 `step500k` remains the benchmark to beat
