@@ -7,7 +7,17 @@ from pathlib import Path
 TEXT_KEYS = ("text", "sentence", "normalized_text")
 AUDIO_KEYS = ("audio_filepath", "audio", "path", "wav")
 DEFAULT_EXCLUDE_BUCKET = "bad_or_reject_like"
+DEFAULT_EXCLUSION_MODE = "aggressive"
 DEFAULT_MIN_PROTECTED_RETENTION = 0.80
+HARD_REASONS = {
+    "audio_unreadable_or_missing",
+    "duration_too_short",
+    "duration_too_long",
+    "chars_per_sec_too_high",
+    "chars_per_sec_too_low",
+    "rms_too_low",
+    "peak_near_clip",
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,6 +32,12 @@ def parse_args() -> argparse.Namespace:
         "--exclude-bucket",
         default=DEFAULT_EXCLUDE_BUCKET,
         help=f"Bucket value to exclude (default: {DEFAULT_EXCLUDE_BUCKET})",
+    )
+    parser.add_argument(
+        "--exclusion-mode",
+        choices=("aggressive", "relaxed", "hard"),
+        default=DEFAULT_EXCLUSION_MODE,
+        help=f"Exclusion mode (default: {DEFAULT_EXCLUSION_MODE})",
     )
     parser.add_argument(
         "--protect-terms",
@@ -78,12 +94,64 @@ def count_terms_in_text(text: str, terms: list[str]) -> dict[str, int]:
     return counts
 
 
-def load_bucket_exclusions(bucket_csv_path: Path, exclude_bucket: str) -> tuple[set[str], set[int], dict[str, int]]:
+def to_float(value: str | None) -> float | None:
+    if value is None:
+        return None
+    value = value.strip()
+    if not value:
+        return None
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def parse_bucket_reasons(raw_reasons: str | None) -> set[str]:
+    if not raw_reasons:
+        return set()
+    return {item for item in raw_reasons.split("|") if item}
+
+
+def should_exclude_bucket_row(row: dict, exclude_bucket: str, exclusion_mode: str) -> bool:
+    if row.get("bucket") != exclude_bucket:
+        return False
+    if exclusion_mode == "aggressive":
+        return True
+
+    reasons = parse_bucket_reasons(row.get("bucket_reasons"))
+    if reasons & HARD_REASONS:
+        return True
+    if exclusion_mode == "hard":
+        return False
+
+    longest_gap = to_float(row.get("longest_internal_gap_sec"))
+    internal_gap_count = to_float(row.get("internal_gap_count"))
+    internal_silence_ratio = to_float(row.get("internal_silence_ratio"))
+    low_energy_ratio = to_float(row.get("low_energy_ratio"))
+
+    if "longest_internal_gap_too_high" in reasons and longest_gap is not None and longest_gap >= 0.80:
+        return True
+    if "internal_gap_count_too_high" in reasons and internal_gap_count is not None and internal_gap_count >= 6:
+        return True
+    if "internal_silence_too_high" in reasons and internal_silence_ratio is not None and internal_silence_ratio >= 0.60:
+        return True
+    if "low_energy_ratio_too_high" in reasons and low_energy_ratio is not None and low_energy_ratio >= 0.60:
+        return True
+    return False
+
+
+def load_bucket_exclusions(
+    bucket_csv_path: Path,
+    exclude_bucket: str,
+    exclusion_mode: str,
+) -> tuple[set[str], set[int], dict[str, int], dict[str, int]]:
     excluded_audio_paths: set[str] = set()
     excluded_line_numbers: set[int] = set()
+    exclusion_reason_counts: dict[str, int] = {}
     stats = {
         "bucket_rows_total": 0,
-        "bucket_rows_matching_exclude": 0,
+        "bucket_rows_matching_bucket": 0,
+        "bucket_rows_selected_for_exclusion": 0,
         "bucket_rows_with_audio_key": 0,
         "bucket_rows_with_line_key": 0,
     }
@@ -94,7 +162,13 @@ def load_bucket_exclusions(bucket_csv_path: Path, exclude_bucket: str) -> tuple[
             stats["bucket_rows_total"] += 1
             if row.get("bucket") != exclude_bucket:
                 continue
-            stats["bucket_rows_matching_exclude"] += 1
+            stats["bucket_rows_matching_bucket"] += 1
+            if not should_exclude_bucket_row(row, exclude_bucket, exclusion_mode):
+                continue
+            stats["bucket_rows_selected_for_exclusion"] += 1
+
+            for reason in parse_bucket_reasons(row.get("bucket_reasons")):
+                exclusion_reason_counts[reason] = exclusion_reason_counts.get(reason, 0) + 1
 
             audio_path = (row.get("audio_filepath") or "").strip()
             if audio_path:
@@ -109,7 +183,7 @@ def load_bucket_exclusions(bucket_csv_path: Path, exclude_bucket: str) -> tuple[
                 except ValueError:
                     pass
 
-    return excluded_audio_paths, excluded_line_numbers, stats
+    return excluded_audio_paths, excluded_line_numbers, stats, exclusion_reason_counts
 
 
 def compute_retention(before: int, after: int) -> float:
@@ -124,12 +198,14 @@ def build_manifest(
     output_manifest_path: Path,
     summary_path: Path,
     exclude_bucket: str,
+    exclusion_mode: str,
     protect_terms: list[str],
     min_protected_retention: float,
 ) -> dict:
-    excluded_audio_paths, excluded_line_numbers, bucket_stats = load_bucket_exclusions(
+    excluded_audio_paths, excluded_line_numbers, bucket_stats, exclusion_reason_counts = load_bucket_exclusions(
         bucket_csv_path,
         exclude_bucket,
+        exclusion_mode,
     )
 
     before_counts = {term: 0 for term in protect_terms}
@@ -182,7 +258,9 @@ def build_manifest(
         "excluded_row_count": excluded_row_count,
         "output_row_count": output_row_count,
         "exclude_bucket": exclude_bucket,
+        "exclusion_mode": exclusion_mode,
         "bucket_stats": bucket_stats,
+        "exclusion_reason_counts": exclusion_reason_counts,
         "matched_excluded_audio_path_count": len(matched_excluded_audio_paths),
         "matched_excluded_line_number_count": len(matched_excluded_line_numbers),
         "unmatched_excluded_audio_path_count": len(excluded_audio_paths - matched_excluded_audio_paths),
@@ -207,15 +285,17 @@ def write_summary(summary_path: Path, summary: dict) -> None:
         handle.write(f"- bucket_csv: `{summary['bucket_csv']}`\n")
         handle.write(f"- output_manifest: `{summary['output_manifest']}`\n")
         handle.write(f"- exclude_bucket: `{summary['exclude_bucket']}`\n")
+        handle.write(f"- exclusion_mode: `{summary['exclusion_mode']}`\n")
         handle.write(f"- input_row_count: {summary['input_row_count']}\n")
         handle.write(f"- excluded_row_count: {summary['excluded_row_count']}\n")
         handle.write(f"- output_row_count: {summary['output_row_count']}\n")
         handle.write("\n## Bucket match stats\n\n")
+        handle.write(f"- bucket_rows_total: {summary['bucket_stats']['bucket_rows_total']}\n")
         handle.write(
-            f"- bucket_rows_total: {summary['bucket_stats']['bucket_rows_total']}\n"
+            f"- bucket_rows_matching_bucket: {summary['bucket_stats']['bucket_rows_matching_bucket']}\n"
         )
         handle.write(
-            f"- bucket_rows_matching_exclude: {summary['bucket_stats']['bucket_rows_matching_exclude']}\n"
+            f"- bucket_rows_selected_for_exclusion: {summary['bucket_stats']['bucket_rows_selected_for_exclusion']}\n"
         )
         handle.write(
             f"- bucket_rows_with_audio_key: {summary['bucket_stats']['bucket_rows_with_audio_key']}\n"
@@ -235,6 +315,16 @@ def write_summary(summary_path: Path, summary: dict) -> None:
         handle.write(
             f"- unmatched_excluded_line_number_count: {summary['unmatched_excluded_line_number_count']}\n"
         )
+
+        handle.write("\n## Top exclusion reasons actually removed\n\n")
+        if summary["exclusion_reason_counts"]:
+            for reason, count in sorted(
+                summary["exclusion_reason_counts"].items(),
+                key=lambda item: (-item[1], item[0]),
+            )[:20]:
+                handle.write(f"- {reason}: {count}\n")
+        else:
+            handle.write("- none\n")
 
         if summary["protected_terms"]:
             handle.write("\n## Protected term retention\n\n")
@@ -286,6 +376,7 @@ def main() -> int:
         output_manifest_path=output_manifest_path,
         summary_path=summary_path,
         exclude_bucket=args.exclude_bucket,
+        exclusion_mode=args.exclusion_mode,
         protect_terms=protect_terms,
         min_protected_retention=args.min_protected_retention,
     )

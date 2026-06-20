@@ -87,3 +87,13 @@ Reduce stutter/gap behavior on Turkish-heavy words and phoneme patterns.
   1. protected term retention
   2. worst excluded rows spot-check
   3. v0.1 `step500k` remains the benchmark to beat
+
+## Relaxed exclusion modes
+
+- Aggressive exclusion was too destructive for protected Turkish-heavy terms.
+- The manifest builder now supports `aggressive`, `relaxed`, and `hard` exclusion modes.
+- Generated local paths:
+  - `data/manifests/train_v0_3_turkish_heavy_relaxed.jsonl`
+  - `data/manifests/train_v0_3_turkish_heavy_hard.jsonl`
+- Manifest selection must be based on protected retention together with gap-metric improvement.
+- Do not train until the selected manifest is reviewed.
