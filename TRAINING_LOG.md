@@ -169,3 +169,23 @@ Quality thresholds:
 **Current conclusion (2026-06-16):** The run is improving in the expected 100k–200k window. Keep training; do not treat lowest loss as the selection criterion. Preserve milestone samples for listening-based checkpoint selection.
 
 ---
+
+
+## 2026-06-21 ? Planned Run v0_4_step500k_finetune_turkish_heavy_001
+
+**Purpose:** Fine-tune from the v0.1 `step500k` checkpoint with a conservative Turkish-heavy manifest strategy. This is explicitly a continuation track, not a scratch retrain.
+
+**Planned command:**
+```bash
+bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_001/piper     runs/v0_4_step500k_finetune_turkish_heavy_001/training     runs/v0_4_step500k_finetune_turkish_heavy_001/checkpoints     runs/v0_1_full_001/candidates/step500k/step500k.ckpt
+```
+
+**Base checkpoint:** `runs/v0_1_full_001/candidates/step500k/step500k.ckpt`
+
+**Selected manifest:** `data/manifests/train_v0_4_finetune_turkish_heavy_conservative.jsonl`
+
+**Milestones:** 5k, 10k, 25k, 50k
+
+**Why this run exists:** v0.3 proved that dataset filtering alone is not sufficient and that scratch retraining on filtered data can regress badly. v0.4 attempts controlled Turkish-heavy improvement while preserving the known-best v0.1 `step500k` quality base.
+
+**Start gate:** Do not proceed unless the prep script prints a command that explicitly includes the base checkpoint and the training log confirms checkpoint restore/resume rather than scratch start.
