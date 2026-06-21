@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
-# train.sh ? Preprocess Piper LJSpeech dataset and train VITS model
+# train.sh - Preprocess Piper LJSpeech dataset and train VITS model
 # Usage: bash train.sh <piper_dir> <training_dir> <checkpoint_dir> [resume_checkpoint]
 #
-# piper_dir          ? output of prepare.sh (wavs/ + metadata.csv + config.json)
-# training_dir       ? output of piper_train.preprocess (phoneme-processed dataset)
-# checkpoint_dir     ? directory for .ckpt files and train.log
-# resume_checkpoint  ? optional checkpoint path or latest/last (default: latest)
+# piper_dir          - output of prepare.sh (wavs/ + metadata.csv + config.json)
+# training_dir       - output of piper_train.preprocess (phoneme-processed dataset)
+# checkpoint_dir     - directory for .ckpt files and train.log
+# resume_checkpoint  - optional checkpoint path or latest/last (default: latest)
 set -euo pipefail
 
 PIPER_DIR="${1:?Usage: train.sh <piper_dir> <training_dir> <checkpoint_dir> [resume_checkpoint]}"
 TRAINING_DIR="${2:?Usage: train.sh <piper_dir> <training_dir> <checkpoint_dir> [resume_checkpoint]}"
 CHECKPOINT_DIR="${3:?Usage: train.sh <piper_dir> <training_dir> <checkpoint_dir> [resume_checkpoint]}"
 RESUME_CHECKPOINT="${4:-latest}"
+CACHE_DIR="${GOKBILGE_PIPER_CACHE_DIR:-$TRAINING_DIR/cache/22050}"
 
-mkdir -p "$TRAINING_DIR" "$CHECKPOINT_DIR"
+mkdir -p "$TRAINING_DIR" "$CHECKPOINT_DIR" "$CACHE_DIR"
 
 if [[ "$RESUME_CHECKPOINT" != "latest" && "$RESUME_CHECKPOINT" != "last" && ! -f "$RESUME_CHECKPOINT" ]]; then
     echo "[train] ERROR: resume checkpoint not found: $RESUME_CHECKPOINT" >&2
@@ -21,8 +22,9 @@ if [[ "$RESUME_CHECKPOINT" != "latest" && "$RESUME_CHECKPOINT" != "last" && ! -f
 fi
 
 echo "[train] Resume mode: $RESUME_CHECKPOINT"
+echo "[train] Audio cache dir: $CACHE_DIR"
 echo "[train] Preprocessing dataset (espeak-ng phonemization)..."
-python3 -m piper_train.preprocess     --language tr     --input-dir "$PIPER_DIR"     --output-dir "$TRAINING_DIR"     --dataset-format ljspeech     --single-speaker     --sample-rate 22050
+python3 -m piper_train.preprocess     --language tr     --input-dir "$PIPER_DIR"     --output-dir "$TRAINING_DIR"     --dataset-format ljspeech     --single-speaker     --sample-rate 22050     --cache-dir "$CACHE_DIR"
 
 echo "[train] Starting VITS training..."
 # --max_epochs 10000 is a ceiling, not the actual target.

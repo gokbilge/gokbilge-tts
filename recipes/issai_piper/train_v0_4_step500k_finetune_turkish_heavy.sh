@@ -22,6 +22,7 @@ RUN_MANIFEST_DIR="$RUN_DIR/manifests"
 PIPER_DIR="$RUN_DIR/piper"
 TRAINING_DIR="$RUN_DIR/training"
 CHECKPOINT_DIR="$RUN_DIR/checkpoints"
+SHARED_CACHE_DIR="$REPO_ROOT/runs/v0_1_full_001/training/cache/22050"
 
 if [[ ! -f "$BASE_CHECKPOINT" ]]; then
     echo "[v0.4-step500k] ERROR: base checkpoint not found: $BASE_CHECKPOINT" >&2
@@ -33,6 +34,10 @@ if [[ ! -f "$SELECTED_MANIFEST" ]]; then
 fi
 if [[ ! -f "$EVAL_SET" ]]; then
     echo "[v0.4-step500k] ERROR: diagnostic eval set missing: $EVAL_SET" >&2
+    exit 1
+fi
+if [[ ! -d "$SHARED_CACHE_DIR" ]]; then
+    echo "[v0.4-step500k] ERROR: shared cache dir missing: $SHARED_CACHE_DIR" >&2
     exit 1
 fi
 
@@ -58,6 +63,7 @@ cp "$SOURCE_MANIFEST_DIR/stats.json" "$RUN_MANIFEST_DIR/stats.json"
 
 echo "[v0.4-step500k] Using selected manifest:   $RUN_MANIFEST_DIR/train.jsonl"
 echo "[v0.4-step500k] Base checkpoint:            $BASE_CHECKPOINT"
+echo "[v0.4-step500k] Shared cache dir:           $SHARED_CACHE_DIR"
 echo "[v0.4-step500k] Run directory:              $RUN_DIR"
 echo "[v0.4-step500k] Diagnostic eval set:        $EVAL_SET"
 echo "[v0.4-step500k] Exporting selected manifest to Piper LJSpeech format..."
@@ -73,4 +79,4 @@ echo "[v0.4-step500k] Fine-tune milestones: 5k, 10k, 25k, 50k"
 echo "[v0.4-step500k] Keep v0.1 step500k as the benchmark to beat."
 echo "[v0.4-step500k] Stop early if fragmented or cut-up audio appears."
 echo "[v0.4-step500k] To start the pilot, run:"
-echo "               bash recipes/issai_piper/train.sh \"$PIPER_DIR\" \"$TRAINING_DIR\" \"$CHECKPOINT_DIR\" \"$BASE_CHECKPOINT\""
+echo "               GOKBILGE_PIPER_CACHE_DIR=\"$SHARED_CACHE_DIR\" bash recipes/issai_piper/train.sh \"$PIPER_DIR\" \"$TRAINING_DIR\" \"$CHECKPOINT_DIR\" \"$BASE_CHECKPOINT\""
