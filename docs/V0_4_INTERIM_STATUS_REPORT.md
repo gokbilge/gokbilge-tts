@@ -75,6 +75,32 @@ Technical interpretation:
 - v0.3 scratch training should not be repeated as the next improvement path.
 - step556k should be preserved locally as the first positive v0.4 candidate signal.
 
+## Latest v0.4 Benchmark Listening Update
+
+Decision: V0_4_MIXED_POSITIVE_CONTINUE_MONITORING
+
+Human listening summary:
+- `s1_bugun_hava.wav`: slightly worse; mild regression risk.
+- `s2_turkiye_cumh.wav`: improved and cleaner.
+- `s3_cocuklar.wav`: still the main unresolved weakness; mild stutter / Turkish-heavy difficulty remains.
+- `s4_ogrenciler.wav`: good, though with some foreign-accent character.
+- `s5_sirket.wav`: improved and moving in the right direction.
+
+Technical interpretation:
+- `s2` is technically clean, with near-zero internal gap signal.
+- `s4` is technically clean, with near-zero internal gap signal.
+- `s3` still has the clearest problem signal, with a larger internal gap / stutter pattern.
+- `s1` shows some regression risk.
+- `s5` is promising but should continue to be monitored for pauses/gaps.
+- v0.4 remains a better direction than v0.3 scratch training.
+- The fine-tune is not uniformly improving every benchmark sentence.
+- v0.1 step500k remains the primary release candidate until v0.4 proves consistent quality over later checkpoints.
+
+Current action:
+- Continue monitoring v0.4.
+- Preserve this benchmark set locally.
+- Compare the next checkpoint against both v0.1 step500k and the first positive v0.4 step556k set.
+
 ## Current Decision
 
 Continue monitoring v0.4.

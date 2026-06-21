@@ -214,3 +214,9 @@ bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_
 - step556k: first positive signal
 - human listening: s4/s5 very good, others improving
 - decision: continue monitoring; v0.1 step500k remains primary RC
+
+## v0.4 monitoring update
+
+Decision: V0_4_MIXED_POSITIVE_CONTINUE_MONITORING
+
+The latest fixed 5-sentence benchmark remains mixed-positive. `s2` and `s5` improved, `s4` is good with some foreign-accent character, `s1` is slightly worse, and `s3` still shows Turkish-heavy stutter/difficulty. Continue monitoring. `v0.1 step500k` remains the primary RC.

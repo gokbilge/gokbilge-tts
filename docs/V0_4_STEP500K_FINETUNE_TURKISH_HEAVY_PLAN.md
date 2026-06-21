@@ -108,3 +108,11 @@ Decision: V0_4_POSITIVE_SIGNAL_CONTINUE_MONITORING
 The first v0.4 step556k benchmark sample set produced a positive listening signal. Human listening found s4 and s5 very good, and the remaining benchmark samples improving. This is a materially better direction than v0.3 relaxed scratch training.
 
 The v0.4 run should continue under close monitoring, but v0.1 step500k remains the primary release candidate until v0.4 proves consistent quality across later checkpoints.
+
+## Latest Monitoring Note
+
+Decision: V0_4_MIXED_POSITIVE_CONTINUE_MONITORING
+
+The latest benchmark listening result remains positive overall but mixed. `s2` and `s5` improved, `s4` is good though slightly foreign-accented, `s1` has mild regression risk, and `s3` still shows Turkish-heavy stutter/difficulty.
+
+The run should continue under close monitoring. Do not replace v0.1 step500k as the primary release candidate yet.
