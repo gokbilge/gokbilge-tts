@@ -189,3 +189,5 @@ bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_
 **Why this run exists:** v0.3 proved that dataset filtering alone is not sufficient and that scratch retraining on filtered data can regress badly. v0.4 attempts controlled Turkish-heavy improvement while preserving the known-best v0.1 `step500k` quality base.
 
 **Start gate:** Do not proceed unless the prep script prints a command that explicitly includes the base checkpoint and the training log confirms checkpoint restore/resume rather than scratch start.
+
+**2026-06-21 v0.4 preprocessing issue:** Conservative oversampling reintroduced duplicate audio rows, and missing shared-cache entries were being written concurrently by multiple preprocess workers. This corrupted `torch.save` outputs in `norm_audio` cache files (`EOFError`, `unexpected pos ...`). Fix: reuse the v0.1 shared cache and patch `piper_train/norm_audio/__init__.py` for atomic cache saves with per-file locks before retrying v0.4.

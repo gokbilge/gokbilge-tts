@@ -122,3 +122,18 @@ samples/
 ```
 
 When adding a new milestone: create the next `NN_` directory, generate all 5 WAVs, and add a metadata block to `samples/README.md`.
+
+## v0.4 Fine-tune Preprocess Cache Race
+
+The v0.4 step500k fine-tune exposed a preprocessing cache race that does not appear in the original v0.1 run shape. Conservative Turkish-heavy oversampling duplicates the same audio rows in the manifest, so multiple preprocess workers can try to create the same 
+orm_audio cache files at once when those cache entries are missing.
+
+Observed failure mode:
+- 	orch.save(...) failures during preprocess
+- corrupted .pt / .spec.pt cache files
+- follow-on EOFError / unexpected pos ... loads
+
+Mitigation:
+- reuse the existing v0.1 shared cache where possible
+- patch piper_train.norm_audio to use per-file locks and atomic 	orch.save replacement for cache writes
+- treat this as a data-pipeline concurrency issue, not as evidence that the step500k checkpoint itself is bad
