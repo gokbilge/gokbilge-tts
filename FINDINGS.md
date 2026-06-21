@@ -166,3 +166,8 @@ For continuation runs from a high-step checkpoint, epoch-only checkpoint cadence
 ## Lightning Checkpoint Cadence Constraint
 
 Lightning 2.3.x rejects simultaneous `every_n_train_steps` and `every_n_epochs` values in a single `ModelCheckpoint`. For v0.4-style fine-tunes, enabling step checkpoints must explicitly disable epoch cadence in the callback configuration.
+
+
+## v0.4 Dataset JSONL Corruption
+
+The malformed dataset.jsonl lines were not caused by target text content. They came from overlapping v0.4 restarts that wrote into the same 	raining/ output directory concurrently. When a continuation run is restarted, the previous preprocess/training processes for the same run directory must be fully stopped before reusing that output path.
