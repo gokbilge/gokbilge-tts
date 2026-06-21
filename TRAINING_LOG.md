@@ -191,3 +191,5 @@ bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_
 **Start gate:** Do not proceed unless the prep script prints a command that explicitly includes the base checkpoint and the training log confirms checkpoint restore/resume rather than scratch start.
 
 **2026-06-21 v0.4 preprocessing issue:** Conservative oversampling reintroduced duplicate audio rows, and missing shared-cache entries were being written concurrently by multiple preprocess workers. This corrupted `torch.save` outputs in `norm_audio` cache files (`EOFError`, `unexpected pos ...`). Fix: reuse the v0.1 shared cache and patch `piper_train/norm_audio/__init__.py` for atomic cache saves with per-file locks before retrying v0.4.
+
+**2026-06-21 restart note:** Initial v0.4 start was blocked by concurrent cache writes in piper_train.norm_audio after conservative oversampling reintroduced duplicate audio rows. Before retrying, the shared v0.1 cache is reused, recent v0.4-created cache entries are cleared, and the external piper_train cache writer is patched to use per-file locks plus atomic replacement.
