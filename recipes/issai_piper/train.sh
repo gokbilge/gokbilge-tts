@@ -33,7 +33,25 @@ echo "[train] Starting VITS training..."
 # With 178k utterances and batch_size=16, each epoch takes about 3h; 10k epochs is only a ceiling.
 # Real stop criterion: perceptual quality plateau around 300k-800k steps.
 # Evaluate at step milestones with: bash tools/eval_step.sh <sample_dir>
-python3 -m piper_train     --dataset-dir "$TRAINING_DIR"     --accelerator gpu     --devices 1     --batch-size 16     --validation-split 0.0     --num-test-examples 0     --max_epochs 10000     --resume_from_checkpoint "$RESUME_CHECKPOINT"     --checkpoint-epochs 100     --checkpoint-steps "$CHECKPOINT_STEPS"     --precision 32     --default_root_dir "$CHECKPOINT_DIR"     2>&1 | tee "$CHECKPOINT_DIR/train.log"
+TRAIN_ARGS=(
+    --dataset-dir "$TRAINING_DIR"
+    --accelerator gpu
+    --devices 1
+    --batch-size 16
+    --validation-split 0.0
+    --num-test-examples 0
+    --max_epochs 10000
+    --resume_from_checkpoint "$RESUME_CHECKPOINT"
+    --checkpoint-steps "$CHECKPOINT_STEPS"
+    --precision 32
+    --default_root_dir "$CHECKPOINT_DIR"
+)
+
+if [[ -z "${GOKBILGE_CHECKPOINT_STEPS:-}" ]]; then
+    TRAIN_ARGS+=(--checkpoint-epochs 100)
+fi
+
+python3 -m piper_train     "${TRAIN_ARGS[@]}"     2>&1 | tee "$CHECKPOINT_DIR/train.log"
 
 echo "[train] Done. Checkpoints in $CHECKPOINT_DIR"
 echo "[train] Next: bash recipes/issai_piper/export_onnx.sh <checkpoint.ckpt> $TRAINING_DIR <output_name>"

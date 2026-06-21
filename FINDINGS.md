@@ -161,3 +161,8 @@ Epoch-only checkpointing is too sparse for continuation runs that resume from a 
 ## v0.4 Fine-tune Restart Policy
 
 For continuation runs from a high-step checkpoint, epoch-only checkpoint cadence is operationally too sparse. The v0.4 run was intentionally restarted from `step500k` with `30000`-step checkpoint cadence so listening checkpoints arrive early enough for review and download.
+
+
+## Lightning Checkpoint Cadence Constraint
+
+Lightning 2.3.x rejects simultaneous `every_n_train_steps` and `every_n_epochs` values in a single `ModelCheckpoint`. For v0.4-style fine-tunes, enabling step checkpoints must explicitly disable epoch cadence in the callback configuration.
