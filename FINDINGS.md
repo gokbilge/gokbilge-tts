@@ -156,3 +156,8 @@ Mitigation:
 ## v0.4 Fine-tune Checkpoint Cadence
 
 Epoch-only checkpointing is too sparse for continuation runs that resume from a high-step baseline such as `v0.1 step500k`. For v0.4-style fine-tunes, use step-based checkpoints at `50000`-step intervals so perceptual listening can happen before another full epoch boundary.
+
+
+## v0.4 Fine-tune Restart Policy
+
+For continuation runs from a high-step checkpoint, epoch-only checkpoint cadence is operationally too sparse. The v0.4 run was intentionally restarted from `step500k` with `30000`-step checkpoint cadence so listening checkpoints arrive early enough for review and download.

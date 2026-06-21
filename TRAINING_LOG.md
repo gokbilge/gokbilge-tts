@@ -198,3 +198,5 @@ bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_
 
 
 **2026-06-21 checkpoint cadence update:** v0.4 fine-tune tooling now supports step-based checkpoints. Default training cadence is every `50000` steps via `GOKBILGE_CHECKPOINT_STEPS`, in addition to the coarse epoch checkpoint schedule, so listening samples can be taken without waiting for epoch 100.
+
+**2026-06-21 restart decision:** The first v0.4 continuation attempt was stopped after step ~554799 without a written checkpoint because epoch-only checkpointing was too sparse for listening-based review. The run will be restarted from `v0.1 step500k` with `GOKBILGE_CHECKPOINT_STEPS=30000` so the first review checkpoint arrives around 530k rather than waiting for epoch 100.
