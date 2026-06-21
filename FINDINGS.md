@@ -137,3 +137,17 @@ Mitigation:
 - reuse the existing v0.1 shared cache where possible
 - patch piper_train.norm_audio to use per-file locks and atomic 	orch.save replacement for cache writes
 - treat this as a data-pipeline concurrency issue, not as evidence that the step500k checkpoint itself is bad
+
+## v0.4 Fine-tune Checkpoint Restore Compatibility
+
+After preprocess completed, the v0.4 fine-tune did not enter training because Lightning/PyTorch checkpoint restore failed on the trusted `v0.1 step500k` checkpoint.
+
+Observed failure mode:
+- `_pickle.UnpicklingError: Weights only load failed`
+- PyTorch 2.6 defaulted `torch.load(..., weights_only=True)`
+- checkpoint contains trusted objects such as `pathlib.PosixPath`
+
+Mitigation:
+- patch `piper_train.__main__` to install a trusted checkpoint loader before `trainer.fit(...)`
+- use `torch.serialization.safe_globals([pathlib.PosixPath])`
+- force `torch.load(..., weights_only=False)` only for this trusted local resume path
