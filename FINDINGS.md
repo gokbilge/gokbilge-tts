@@ -151,3 +151,8 @@ Mitigation:
 - patch `piper_train.__main__` to install a trusted checkpoint loader before `trainer.fit(...)`
 - use `torch.serialization.safe_globals([pathlib.PosixPath])`
 - force `torch.load(..., weights_only=False)` only for this trusted local resume path
+
+
+## v0.4 Fine-tune Checkpoint Cadence
+
+Epoch-only checkpointing is too sparse for continuation runs that resume from a high-step baseline such as `v0.1 step500k`. For v0.4-style fine-tunes, use step-based checkpoints at `50000`-step intervals so perceptual listening can happen before another full epoch boundary.

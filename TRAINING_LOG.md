@@ -195,3 +195,6 @@ bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_
 **2026-06-21 restart note:** Initial v0.4 start was blocked by concurrent cache writes in piper_train.norm_audio after conservative oversampling reintroduced duplicate audio rows. Before retrying, the shared v0.1 cache is reused, recent v0.4-created cache entries are cleared, and the external piper_train cache writer is patched to use per-file locks plus atomic replacement.
 
 **2026-06-21 checkpoint-restore blocker:** v0.4 preprocess completed, but the run did not advance to step 1 because Lightning checkpoint restore failed under PyTorch 2.6 `weights_only=True` defaults when loading the trusted `v0.1 step500k` checkpoint. Before retrying, patch `piper_train.__main__` to install a trusted checkpoint loader that allowlists `pathlib.PosixPath` and uses `weights_only=False` for this local resume path.
+
+
+**2026-06-21 checkpoint cadence update:** v0.4 fine-tune tooling now supports step-based checkpoints. Default training cadence is every `50000` steps via `GOKBILGE_CHECKPOINT_STEPS`, in addition to the coarse epoch checkpoint schedule, so listening samples can be taken without waiting for epoch 100.
