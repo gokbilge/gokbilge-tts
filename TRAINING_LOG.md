@@ -204,3 +204,13 @@ bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_
 **2026-06-21 cadence fix:** step-based checkpointing must disable epoch-based cadence in Lightning 2.3.x. The v0.4 run now uses only `GOKBILGE_CHECKPOINT_STEPS` when set; current target cadence is every `30000` steps.
 
 **2026-06-21 dataset corruption root cause:** malformed 	raining/dataset.jsonl was caused by overlapping v0.4 restarts writing into the same 	raining/ output directory. The fix is to stop all concurrent v0.4 wrappers/processes, preserve the corrupted attempt locally, and restart a single clean preprocess+train flow into a fresh 	raining/ and checkpoints/ state.
+
+
+## v0.4 step500k Turkish-heavy fine-tune
+
+- base: v0.1 step500k
+- run: runs/v0_4_step500k_finetune_turkish_heavy_001
+- manifest: train_v0_4_finetune_turkish_heavy_conservative.jsonl
+- step556k: first positive signal
+- human listening: s4/s5 very good, others improving
+- decision: continue monitoring; v0.1 step500k remains primary RC

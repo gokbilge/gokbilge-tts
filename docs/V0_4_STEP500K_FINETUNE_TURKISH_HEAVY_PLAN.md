@@ -99,3 +99,12 @@ Do not start v0.4 unless all of the following are true:
 - selected manifest exists
 - prep script prints a train command that includes the base checkpoint path
 - early log output confirms checkpoint restore/resume instead of scratch start
+
+
+## Interim Step556k Result
+
+Decision: V0_4_POSITIVE_SIGNAL_CONTINUE_MONITORING
+
+The first v0.4 step556k benchmark sample set produced a positive listening signal. Human listening found s4 and s5 very good, and the remaining benchmark samples improving. This is a materially better direction than v0.3 relaxed scratch training.
+
+The v0.4 run should continue under close monitoring, but v0.1 step500k remains the primary release candidate until v0.4 proves consistent quality across later checkpoints.

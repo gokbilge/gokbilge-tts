@@ -159,3 +159,12 @@ Listening note: 500k shows a strong v0.1 release-candidate signal and is clearly
 | s3_cocuklar.wav | main unresolved weakness; stutters/skips on Turkish-heavy words |
 | s4_ogrenciler.wav | strong and comparatively stable |
 | s5_sirket.wav | strong; supports 500k as primary RC candidate |
+
+
+## 18_v0_4_finetune_step556k — metadata
+
+Checkpoint label: `step556k` v0.4 fine-tune continuation export.
+
+Listening note: first positive v0.4 continuation signal. `s4_ogrenciler.wav` and `s5_sirket.wav` are very good, while `s1_bugun_hava.wav`, `s2_turkiye_cumh.wav`, and `s3_cocuklar.wav` are improving. This direction is materially better than the v0.3 scratch pilot and should be preserved locally for comparison against later v0.4 checkpoints.
+
+Candidate status: preserve locally as the first positive v0.4 fine-tune signal. Do not replace `v0.1 step500k` as the primary release candidate until later v0.4 checkpoints confirm consistent quality.
