@@ -116,3 +116,17 @@ Decision: V0_4_MIXED_POSITIVE_CONTINUE_MONITORING
 The latest benchmark listening result remains positive overall but mixed. `s2` and `s5` improved, `s4` is good though slightly foreign-accented, `s1` has mild regression risk, and `s3` still shows Turkish-heavy stutter/difficulty.
 
 The run should continue under close monitoring. Do not replace v0.1 step500k as the primary release candidate yet.
+
+## Current Best v0.4 Candidate
+
+Decision: V0_4_CURRENT_BEST_CANDIDATE_PRESERVE
+
+The current best v0.4 candidate so far is:
+
+`samples/20_v0_4_finetune_epoch53_step1230000`
+
+This checkpoint is preferred over 18/19/21 based on the latest fixed five-sentence benchmark listening. `s2` and `s5` improved, `s4` is good with some foreign-accent character, `s1` still needs monitoring, and `s3` remains the main unresolved Turkish-heavy weakness with mild stutter/difficulty.
+
+The later `21_v0_4_finetune_epoch54_step1260000` sample set does not clearly improve over 20 and shows regression risk, especially on `s1`.
+
+Do not replace v0.1 step500k as the primary release candidate yet. Preserve checkpoint 20 as the current best v0.4 comparison candidate.

@@ -168,3 +168,30 @@ Checkpoint label: `step556k` v0.4 fine-tune continuation export.
 Listening note: first positive v0.4 continuation signal. `s4_ogrenciler.wav` and `s5_sirket.wav` are very good, while `s1_bugun_hava.wav`, `s2_turkiye_cumh.wav`, and `s3_cocuklar.wav` are improving. Later listening remains mixed-positive: `s2` and `s5` improved further, `s4` stayed good with some foreign-accent character, `s1` showed mild regression risk, and `s3` remained the key unresolved Turkish-heavy weakness with mild stutter / gap behavior. This direction is materially better than the v0.3 scratch pilot and should be preserved locally for comparison against later v0.4 checkpoints.
 
 Candidate status: preserve locally as the first positive v0.4 fine-tune signal. Do not replace `v0.1 step500k` as the primary release candidate until later v0.4 checkpoints confirm consistent quality.
+
+---
+
+## Additional v0.4 checkpoint comparison notes
+
+| Directory | Steps | Quality |
+|---|---|---|
+| 18_v0_4_finetune_step556k | 556k | first positive v0.4 continuation signal; preserve locally for comparison |
+| 19_v0_4_finetune_step574k | 574k | mixed result with regression risk; not preferred over 20 |
+| 20_v0_4_finetune_epoch53_step1230000 | 1.23M | current best v0.4 candidate so far; s2 and s5 improved, s4 good with slight foreign-accent character, s1 still needs monitoring, s3 remains the main unresolved Turkish-heavy weakness; preserve locally |
+| 21_v0_4_finetune_epoch54_step1260000 | 1.26M | later regression signal; does not clearly beat 20, especially due to s1 risk |
+
+## 20_v0_4_finetune_epoch53_step1230000 â€” metadata
+
+Checkpoint label: `epoch53-step1230000` v0.4 fine-tune continuation export.
+
+Listening note: current best v0.4 candidate so far. `s2_turkiye_cumh.wav` and `s5_sirket.wav` improved, `s4_ogrenciler.wav` is good with a slight foreign-accent character, `s1_bugun_hava.wav` still needs monitoring, and `s3_cocuklar.wav` remains the key unresolved Turkish-heavy weakness with mild stutter/difficulty.
+
+Candidate status: preserve locally as `V0_4_CURRENT_BEST_CANDIDATE_PRESERVE`. Do not replace `v0.1 step500k` as the primary release candidate until wider validation confirms consistent quality.
+
+## 21_v0_4_finetune_epoch54_step1260000 â€” metadata
+
+Checkpoint label: `epoch54-step1260000` v0.4 fine-tune continuation export.
+
+Listening note: later follow-up checkpoint with regression risk. It does not clearly improve over checkpoint 20 and appears worse on `s1_bugun_hava.wav`, while `s3_cocuklar.wav` remains unresolved.
+
+Candidate status: preserve locally for comparison, but do not prefer over `20_v0_4_finetune_epoch53_step1230000`.

@@ -101,6 +101,38 @@ Current action:
 - Preserve this benchmark set locally.
 - Compare the next checkpoint against both v0.1 step500k and the first positive v0.4 step556k set.
 
+## v0.4 Checkpoint Comparison Update
+
+Decision: V0_4_CURRENT_BEST_CANDIDATE_PRESERVE
+
+Current best v0.4 candidate so far:
+
+`samples/20_v0_4_finetune_epoch53_step1230000`
+
+Compared sample sets:
+- `18_v0_4_finetune_step556k` - first positive v0.4 continuation signal.
+- `19_v0_4_finetune_step574k` - mixed result with regression risk.
+- `20_v0_4_finetune_epoch53_step1230000` - current best v0.4 candidate so far.
+- `21_v0_4_finetune_epoch54_step1260000` - later regression signal, especially on `s1`.
+
+Human listening summary for 20:
+- `s1_bugun_hava.wav`: still needs monitoring, but better than the later 21 regression.
+- `s2_turkiye_cumh.wav`: improved / good.
+- `s3_cocuklar.wav`: still the main unresolved weakness; mild stutter / Turkish-heavy difficulty remains.
+- `s4_ogrenciler.wav`: good, with a slight foreign-accent character.
+- `s5_sirket.wav`: improved and good.
+
+Interpretation:
+- v0.4 remains a better direction than v0.3 scratch training.
+- `20_v0_4_finetune_epoch53_step1230000` should be preserved as the current best v0.4 candidate.
+- Later fine-tuning may introduce regression or over-fine-tuning; 21 does not clearly beat 20.
+- v0.1 step500k remains the primary release candidate until v0.4 is validated more broadly.
+
+Current action:
+- Preserve 20 locally.
+- Continue using v0.1 step500k as the benchmark to beat.
+- Compare later checkpoints against both v0.1 step500k and v0.4 checkpoint 20.
+
 ## Current Decision
 
 Continue monitoring v0.4.

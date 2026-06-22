@@ -220,3 +220,11 @@ bash recipes/issai_piper/train.sh     runs/v0_4_step500k_finetune_turkish_heavy_
 Decision: V0_4_MIXED_POSITIVE_CONTINUE_MONITORING
 
 The latest fixed 5-sentence benchmark remains mixed-positive. `s2` and `s5` improved, `s4` is good with some foreign-accent character, `s1` is slightly worse, and `s3` still shows Turkish-heavy stutter/difficulty. Continue monitoring. `v0.1 step500k` remains the primary RC.
+
+## v0.4 checkpoint comparison update
+
+Decision: V0_4_CURRENT_BEST_CANDIDATE_PRESERVE
+
+The latest fixed five-sentence v0.4 comparison identifies `20_v0_4_finetune_epoch53_step1230000` as the current best v0.4 candidate so far. 18 was the first positive signal, 19 is mixed, and 21 shows later regression risk. 20 improves or remains good on s2/s4/s5 while s3 remains the key Turkish-heavy weakness and s1 still needs monitoring.
+
+`v0.1 step500k` remains the primary release candidate.
