@@ -24,11 +24,14 @@ __pycache__/
 *.pyo
 .venv/
 venv/
+external/xtts_v2/.venv/
+external/xtts_v2/cache/
 
 # Audio outputs (use samples/ for tracked ones)
 eval_output/
 eval_*/
 /tmp/
+samples/25_xtts_v2_tr*/
 
 # v0.2 dataset cleaning generated outputs
 reports/dataset_audit.csv
