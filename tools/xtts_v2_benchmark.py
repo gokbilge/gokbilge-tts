@@ -9,7 +9,9 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import soundfile as sf
 import torch
+import torchaudio
 from TTS.api import TTS
 
 MODEL_NAME = "tts_models/multilingual/multi-dataset/xtts_v2"
@@ -43,6 +45,7 @@ def resolve_device(requested: str) -> str:
 
 def load_tts(device: str) -> TTS:
     patch_torch_load_defaults()
+    patch_torchaudio_load()
     tts = TTS(model_name=MODEL_NAME, progress_bar=True)
     if hasattr(tts, "to"):
         tts = tts.to(device)
@@ -60,6 +63,26 @@ def patch_torch_load_defaults() -> None:
 
     setattr(patched_torch_load, "_gokbilge_xtts_patched", True)
     torch.load = patched_torch_load
+
+
+def patch_torchaudio_load() -> None:
+    original_load = torchaudio.load
+    if getattr(original_load, "_gokbilge_xtts_patched", False):
+        return
+
+    def patched_load(filepath, *args, **kwargs):
+        audio, sample_rate = sf.read(str(filepath), dtype="float32", always_2d=True)
+        tensor = torch.from_numpy(audio.T.copy())
+        return tensor, sample_rate
+
+    setattr(patched_load, "_gokbilge_xtts_patched", True)
+    torchaudio.load = patched_load
+    try:
+        from TTS.tts.models import xtts as xtts_module
+
+        xtts_module.torchaudio.load = patched_load
+    except Exception:
+        pass
 
 
 def choose_default_speaker(tts: TTS) -> str | None:
