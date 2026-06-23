@@ -164,3 +164,25 @@ Stop or roll back if:
 - fragmented/cut-up synthesis appears
 - s1/s2/s4/s5 regress
 - s3 does not improve and general quality declines
+
+## v0.4 Closure Decision
+
+Decision: V0_4_PLATEAU_REGRESSION_STOP
+
+v0.4 fine-tuning has been stopped because progress plateaued and later checkpoints did not clearly beat the current best candidate.
+
+Current best v0.4 candidate:
+
+`samples/20_v0_4_finetune_epoch53_step1230000`
+
+Summary:
+- `18_v0_4_finetune_step556k` was the first positive continuation signal.
+- `19_v0_4_finetune_step574k` was mixed with regression risk.
+- `20_v0_4_finetune_epoch53_step1230000` is the current best v0.4 candidate.
+- Later checkpoints, including 21 and beyond, did not clearly improve over 20 and showed regression/trade-off signals.
+
+Interpretation:
+- v0.4 confirmed that fine-tuning from v0.1 step500k is a better direction than v0.3 scratch training.
+- Further continuation of this run is not justified because it appears to trade quality across benchmark sentences rather than improve globally.
+- v0.1 step500k remains the primary release candidate.
+- v0.4 candidate 20 should be preserved locally for broader validation.

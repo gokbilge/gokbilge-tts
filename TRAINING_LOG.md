@@ -228,3 +228,75 @@ Decision: V0_4_CURRENT_BEST_CANDIDATE_PRESERVE
 The latest fixed five-sentence v0.4 comparison identifies `20_v0_4_finetune_epoch53_step1230000` as the current best v0.4 candidate so far. 18 was the first positive signal, 19 is mixed, and 21 shows later regression risk. 20 improves or remains good on s2/s4/s5 while s3 remains the key Turkish-heavy weakness and s1 still needs monitoring.
 
 `v0.1 step500k` remains the primary release candidate.
+
+---
+
+## 2026-06-22 - Sample export request for v0.4 epoch57 step1320000
+
+**Purpose:** Generate and download a fixed 5-sentence benchmark sample set for the newest durable v0.4 checkpoint on the remote trainer without waiting for another checkpoint.
+
+**Target checkpoint:** `runs/v0_4_step500k_finetune_turkish_heavy_001/checkpoints/lightning_logs/version_0/checkpoints/epoch=57-step=1320000.ckpt`
+
+**Planned sample directory:** `samples/22_v0_4_finetune_epoch57_step1320000`
+
+**Method:** Use the exact checkpoint file on `10.20.20.9` for ONNX export and synthesize the fixed benchmark set, then transfer the generated WAVs back locally with `pscp`.
+
+**Result:** Completed on `10.20.20.9` using `bash tools/eval_step.sh 22_v0_4_finetune_epoch57_step1320000 runs/v0_4_step500k_finetune_turkish_heavy_001`.
+
+- Export source: `runs/v0_4_step500k_finetune_turkish_heavy_001/checkpoints/lightning_logs/version_0/checkpoints/last.ckpt`
+- Durable checkpoint at export time: `epoch=57-step=1320000.ckpt` (`2026-06-22 20:44:52` Istanbul mtime on server)
+- Generated remote sample set: `samples/22_v0_4_finetune_epoch57_step1320000`
+- Downloaded locally with `pscp` to the same path under this repo
+- Benchmark WAV timestamps on server: `2026-06-22 21:31` Istanbul
+
+**Notes:** No newer durable v0.4 checkpoint existed on the server at export time. The training process continued running after sample generation, so this sample set is the current exact review artifact for checkpoint `epoch57-step1320000`.
+
+---
+
+## 2026-06-23 - Sample export request for v0.4 epoch58 step1350000
+
+**Purpose:** Generate and download the fixed 5-sentence benchmark sample set for the next durable v0.4 checkpoint after `epoch57-step1320000`.
+
+**Target checkpoint:** `runs/v0_4_step500k_finetune_turkish_heavy_001/checkpoints/lightning_logs/version_0/checkpoints/epoch=58-step=1350000.ckpt`
+
+**Planned sample directory:** `samples/23_v0_4_finetune_epoch58_step1350000`
+
+**Method:** Export ONNX directly from the exact checkpoint file on `10.20.20.9`, synthesize the fixed benchmark set, then transfer the generated WAVs back locally with `pscp`.
+
+**Result:** Completed on `10.20.20.9` for checkpoint `epoch=58-step=1350000.ckpt`.
+
+- Export source: `runs/v0_4_step500k_finetune_turkish_heavy_001/checkpoints/lightning_logs/version_0/checkpoints/epoch=58-step=1350000.ckpt`
+- Generated remote sample set: `samples/23_v0_4_finetune_epoch58_step1350000`
+- Downloaded locally with `pscp` to the same path under this repo
+- Benchmark WAV timestamps on server: `2026-06-23 01:31` Istanbul
+
+**Notes:** Direct Turkish text over `plink` hit encoding issues, so the inference script was uploaded with `pscp` and executed remotely to preserve the fixed Turkish benchmark strings exactly.
+
+---
+
+## 2026-06-23 - Sample export request for v0.4 epoch60 step1410000
+
+**Purpose:** Generate and download the fixed 5-sentence benchmark sample set for the latest durable v0.4 checkpoint currently available on the remote trainer.
+
+**Target checkpoint:** `runs/v0_4_step500k_finetune_turkish_heavy_001/checkpoints/lightning_logs/version_0/checkpoints/epoch=60-step=1410000.ckpt`
+
+**Planned sample directory:** `samples/24_v0_4_finetune_epoch60_step1410000`
+
+**Method:** Export ONNX directly from the exact checkpoint file on `10.20.20.9`, synthesize the fixed benchmark set remotely, then transfer the generated WAVs back locally with `pscp`.
+
+**Result:** Completed on `10.20.20.9` for checkpoint `epoch=60-step=1410000.ckpt`.
+
+- Export source: `runs/v0_4_step500k_finetune_turkish_heavy_001/checkpoints/lightning_logs/version_0/checkpoints/epoch=60-step=1410000.ckpt`
+- Generated remote sample set: `samples/24_v0_4_finetune_epoch60_step1410000`
+- Downloaded locally with `pscp` to the same path under this repo
+- Benchmark WAV timestamps on server: `2026-06-23 08:23` Istanbul
+
+**Notes:** As with the previous export, the fixed Turkish benchmark sentences were executed from a UTF-8 script uploaded with `pscp` so the remote phonemization path preserved Turkish characters exactly.
+
+---
+
+## v0.4 closure
+
+Decision: V0_4_PLATEAU_REGRESSION_STOP
+
+v0.4 fine-tuning has been stopped. The current best v0.4 candidate is `20_v0_4_finetune_epoch53_step1230000`. Later checkpoints did not clearly beat 20 and showed plateau/regression behavior. `v0.1 step500k` remains the primary release candidate.

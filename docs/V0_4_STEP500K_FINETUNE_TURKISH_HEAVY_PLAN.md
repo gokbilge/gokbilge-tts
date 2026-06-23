@@ -130,3 +130,15 @@ This checkpoint is preferred over 18/19/21 based on the latest fixed five-senten
 The later `21_v0_4_finetune_epoch54_step1260000` sample set does not clearly improve over 20 and shows regression risk, especially on `s1`.
 
 Do not replace v0.1 step500k as the primary release candidate yet. Preserve checkpoint 20 as the current best v0.4 comparison candidate.
+
+## Closure
+
+Decision: V0_4_PLATEAU_REGRESSION_STOP
+
+The v0.4 fine-tune run has been stopped after plateau/regression behavior appeared. The best candidate so far is:
+
+`samples/20_v0_4_finetune_epoch53_step1230000`
+
+Later checkpoints did not clearly beat 20 and showed regression/trade-off signals. Further improvement should not come from simply continuing this run.
+
+v0.1 step500k remains the primary release candidate. v0.4 candidate 20 should be preserved as the current best v0.4 comparison candidate.

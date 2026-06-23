@@ -177,8 +177,11 @@ Candidate status: preserve locally as the first positive v0.4 fine-tune signal. 
 |---|---|---|
 | 18_v0_4_finetune_step556k | 556k | first positive v0.4 continuation signal; preserve locally for comparison |
 | 19_v0_4_finetune_step574k | 574k | mixed result with regression risk; not preferred over 20 |
-| 20_v0_4_finetune_epoch53_step1230000 | 1.23M | current best v0.4 candidate so far; s2 and s5 improved, s4 good with slight foreign-accent character, s1 still needs monitoring, s3 remains the main unresolved Turkish-heavy weakness; preserve locally |
+| 20_v0_4_finetune_epoch53_step1230000 | 1.23M | current best v0.4 candidate; preserve locally; later checkpoints did not clearly beat it |
 | 21_v0_4_finetune_epoch54_step1260000 | 1.26M | later regression signal; does not clearly beat 20, especially due to s1 risk |
+| 22_v0_4_finetune_epoch57_step1320000 | 1.32M | newly exported from the latest durable v0.4 checkpoint; listening review not done yet |
+| 23_v0_4_finetune_epoch58_step1350000 | 1.35M | newly exported from the next durable v0.4 checkpoint; listening review not done yet |
+| 24_v0_4_finetune_epoch60_step1410000 | 1.41M | newly exported from the latest durable v0.4 checkpoint; listening review not done yet |
 
 ## 20_v0_4_finetune_epoch53_step1230000 â€” metadata
 
@@ -186,7 +189,9 @@ Checkpoint label: `epoch53-step1230000` v0.4 fine-tune continuation export.
 
 Listening note: current best v0.4 candidate so far. `s2_turkiye_cumh.wav` and `s5_sirket.wav` improved, `s4_ogrenciler.wav` is good with a slight foreign-accent character, `s1_bugun_hava.wav` still needs monitoring, and `s3_cocuklar.wav` remains the key unresolved Turkish-heavy weakness with mild stutter/difficulty.
 
-Candidate status: preserve locally as `V0_4_CURRENT_BEST_CANDIDATE_PRESERVE`. Do not replace `v0.1 step500k` as the primary release candidate until wider validation confirms consistent quality.
+Candidate status: `V0_4_CURRENT_BEST_CANDIDATE_PRESERVE`.
+
+Closure note: later v0.4 checkpoints did not clearly beat this candidate and showed plateau/regression behavior. `v0.1 step500k` remains the primary release candidate.
 
 ## 21_v0_4_finetune_epoch54_step1260000 â€” metadata
 
@@ -195,3 +200,51 @@ Checkpoint label: `epoch54-step1260000` v0.4 fine-tune continuation export.
 Listening note: later follow-up checkpoint with regression risk. It does not clearly improve over checkpoint 20 and appears worse on `s1_bugun_hava.wav`, while `s3_cocuklar.wav` remains unresolved.
 
 Candidate status: preserve locally for comparison, but do not prefer over `20_v0_4_finetune_epoch53_step1230000`.
+
+## 22_v0_4_finetune_epoch57_step1320000 - metadata
+
+Checkpoint label: `epoch57-step1320000` v0.4 fine-tune continuation export.
+
+Listening note: not reviewed yet. This sample set was exported from the latest durable v0.4 checkpoint on `2026-06-22` while training continued beyond that point.
+
+Candidate status: preserve locally for direct comparison against `20_v0_4_finetune_epoch53_step1230000` and `21_v0_4_finetune_epoch54_step1260000`.
+
+| File | Duration |
+|---|---|
+| s1_bugun_hava.wav | 2.29 s |
+| s2_turkiye_cumh.wav | 3.00 s |
+| s3_cocuklar.wav | 1.97 s |
+| s4_ogrenciler.wav | 2.33 s |
+| s5_sirket.wav | 2.17 s |
+
+## 23_v0_4_finetune_epoch58_step1350000 - metadata
+
+Checkpoint label: `epoch58-step1350000` v0.4 fine-tune continuation export.
+
+Listening note: not reviewed yet. This sample set was exported directly from the next durable v0.4 checkpoint after `epoch57-step1320000`.
+
+Candidate status: preserve locally for direct comparison against `20_v0_4_finetune_epoch53_step1230000`, `21_v0_4_finetune_epoch54_step1260000`, and `22_v0_4_finetune_epoch57_step1320000`.
+
+| File | Duration |
+|---|---|
+| s1_bugun_hava.wav | 1.22 s |
+| s2_turkiye_cumh.wav | 3.07 s |
+| s3_cocuklar.wav | 2.94 s |
+| s4_ogrenciler.wav | 2.21 s |
+| s5_sirket.wav | 2.24 s |
+
+## 24_v0_4_finetune_epoch60_step1410000 - metadata
+
+Checkpoint label: `epoch60-step1410000` v0.4 fine-tune continuation export.
+
+Listening note: not reviewed yet. This sample set was exported directly from the latest durable v0.4 checkpoint currently available on the remote trainer.
+
+Candidate status: preserve locally for direct comparison against `20_v0_4_finetune_epoch53_step1230000`, `22_v0_4_finetune_epoch57_step1320000`, and `23_v0_4_finetune_epoch58_step1350000`.
+
+| File | Duration |
+|---|---|
+| s1_bugun_hava.wav | 2.09 s |
+| s2_turkiye_cumh.wav | 2.68 s |
+| s3_cocuklar.wav | 2.09 s |
+| s4_ogrenciler.wav | 2.82 s |
+| s5_sirket.wav | 2.09 s |
